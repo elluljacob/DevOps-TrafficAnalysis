@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getStats } from '@/lib/database'
+import { getStats } from '@/components/data_fetch_requests'
 
 export async function GET() {
   try {
