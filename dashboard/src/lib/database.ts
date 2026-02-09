@@ -1,4 +1,5 @@
 import { PieChartStat } from "@/types/stats"
+import { log, LogLevel} from "./logger"
 
 
 
@@ -13,8 +14,9 @@ import { PieChartStat } from "@/types/stats"
 const labels = ['Cars', 'Bikes', 'Buses', 'Trucks', 'Pedestrians']
 
 export function getStats(): PieChartStat[] {
-  return labels.map(label => ({
-    label,
-    value: Math.floor(Math.random() * 100) + 1, // random 1–100
-  }))
+    log("Generating pie chart Statistics", LogLevel.INFO)
+    return labels.map(label => ({
+        label,
+        value: Math.floor(Math.random() * 100) + 1, // random 1–100
+    }))
 }
