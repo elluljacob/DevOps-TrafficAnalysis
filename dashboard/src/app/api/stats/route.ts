@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { getStats } from '@/components/data_fetch_requests'
+import { TimeRange } from '@/types/stats'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const stats = await getStats()
+    const searchParams = request.nextUrl.searchParams
+    const range = (searchParams.get('range') as TimeRange) || 'live'
+    
+    const stats = await getStats(range)
     return NextResponse.json(stats)
   } catch (err) {
     console.error(err)
