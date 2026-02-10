@@ -1,22 +1,52 @@
-import { PieChartStat } from "@/types/stats"
-import { log, LogLevel} from "./logger"
+import mongoose from 'mongoose';
+import { log, LogLevel } from './logger';
 
+const MONGODB_URI = process.env.MONGODB_URI;
 
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable');
+}
 
+// Global interface to prevent hot-reload connection leaks in dev
+interface MongooseCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
 
-/* ============================================================================
- *  Get Stats
- * ----------------------------------------------------------------------------
- * Stupid function to generate random values from 1 - 100 for the given label
- * ============================================================================
- */
+declare global {
+  var mongoose: MongooseCache;
+}
 
-const labels = ['Cars', 'Bikes', 'Buses', 'Trucks', 'Pedestrians']
+let cached = global.mongoose;
 
-export function getStats(): PieChartStat[] {
-    log("Generating pie chart Statistics", LogLevel.INFO)
-    return labels.map(label => ({
-        label,
-        value: Math.floor(Math.random() * 100) + 1, // random 1–100
-    }))
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+export async function connectToDatabase() {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+    };
+
+    log(`Connecting to MongoDB at ${MONGODB_URI}`, LogLevel.INFO);
+    
+    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
+      return mongoose;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    log(`DB Connection Error: ${e}`, LogLevel.ERROR);
+    throw e;
+  }
+
+  return cached.conn;
 }
