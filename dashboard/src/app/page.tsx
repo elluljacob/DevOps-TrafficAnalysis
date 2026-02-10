@@ -30,7 +30,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Pie chart section */}
         <div className="my-12 w-full flex justify-center">
           <EChartsPieChart />
         </div>

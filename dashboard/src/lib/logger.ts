@@ -32,8 +32,8 @@ const logFile = path.join(process.cwd(), 'server.log')
  * ============================================================================
  */
 let enableConsoleLog = true
-export function setConsoleLogging(enabled: boolean) {
-    enableConsoleLog = enabled
+export function toggleConsoleLogging() {
+    enableConsoleLog = !enableConsoleLog
 }
 
 /* ============================================================================
