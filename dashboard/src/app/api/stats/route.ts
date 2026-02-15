@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { getStats } from '@/components/data_fetch_requests'
+import { getStats } from '@/app/api/stats/data_fetch_requests'
 import { TimeRange } from '@/types/stats'
 
 export async function GET(request: NextRequest) {

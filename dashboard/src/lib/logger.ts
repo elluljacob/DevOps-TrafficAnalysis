@@ -31,7 +31,7 @@ const logFile = path.join(process.cwd(), 'server.log')
  * Set to true/false to enable/disable coloured console output
  * ============================================================================
  */
-let enableConsoleLog = true
+let enableConsoleLog = false
 export function toggleConsoleLogging() {
     enableConsoleLog = !enableConsoleLog
 }

@@ -1,52 +1,40 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import ReactECharts from 'echarts-for-react'
+import PieChart from '@/components/chart_generators/generate_piechart'
 import { PieChartStat } from '@/types/stats'
 
-export default function EChartsPieChart() {
-  const [stats, setStats] = useState<PieChartStat[]>([])
+export default function DashboardPieChart() {
+    const [stats, setStats] = useState<PieChartStat[]>([])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/stats')
-        if (!res.ok) throw new Error('Failed to fetch stats')
-        const data: PieChartStat[] = await res.json()
-        setStats(data)
-      } catch (err) {
-        console.error(err)
-      }
-    }
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await fetch('/api/stats')
+                if (!res.ok) throw new Error('Failed to fetch stats')
+                const data: PieChartStat[] = await res.json()
+                setStats(data)
+            } catch (err) {
+                console.error(err)
+            }
+        }
 
-    fetchData()
-    const interval = setInterval(fetchData, 5000) // refresh every 5s
-    return () => clearInterval(interval)
-  }, [])
+        fetchData()
+        const interval = setInterval(fetchData, 5000)
+        return () => clearInterval(interval)
+    }, [])
 
-  const option = {
-    tooltip: {
-      trigger: 'item',
-    },
-    legend: {
-      bottom: 0,
-    },
-    series: [
-      {
-        name: 'Statistics',
-        type: 'pie',
-        radius: '50%',
-        data: stats.map(s => ({ value: s.value, name: s.label })),
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0,0,0,0.5)',
-          },
-        },
-      },
-    ],
-  }
-
-  return <ReactECharts option={option} style={{ height: 300, width: 300 }} />
+    return (
+        <PieChart
+            data={stats}
+            config={{
+                labelKey: 'label',
+                valueKey: 'value',
+                colors: ['#3b82f6', '#b9a010', '#f50b0b', '#f50b0b', '#f50b0b' ], // optional
+                legendPosition: 'bottom',
+                height: 300,
+                width: 300
+            }}
+        />
+    )
 }

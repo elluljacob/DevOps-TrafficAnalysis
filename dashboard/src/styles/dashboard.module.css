@@ -1,0 +1,52 @@
+/* The Negative Space (Deep Background) */
+.layoutWrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    background-color: #09090b; /* Zinc-950 */
+    overflow: hidden;
+    margin: 0;
+}
+
+/* --- Sidebar (30%) --- */
+.sidebar {
+    width: 30%;
+    height: 100%;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Main Content (70%) --- */
+.mainContent {
+    width: 70%;
+    height: 100%;
+    padding: 2.5rem 2.5rem 2.5rem 0;
+    overflow-y: auto;
+}
+
+.dashboardGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+/* --- Floating Bubbles (The "Islands") --- */
+.bubble {
+    background-color: #18181b; /* Zinc-900 */
+    border-radius: 32px; /* Smoother, rounder bubbles */
+    padding: 2rem;
+    /* Deeper, more aggressive shadow for dark mode depth */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.03); /* Very subtle rim light */
+}
+
+/* Optional: Hover effect to make them feel interactive */
+.bubble:hover {
+    border-color: rgba(255, 255, 255, 0.08);
+    transition: border-color 0.3s ease;
+}
+
+.fullWidth {
+    grid-column: span 2;
+}
