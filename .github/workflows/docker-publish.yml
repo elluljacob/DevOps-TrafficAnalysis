@@ -5,7 +5,11 @@ on:
     branches:
       - main
     paths:
+     # Tells github to only run this pipeline if files in the 
+     # dashboard folder change
       - 'dashboard/**'
+  workflow_dispatch:
+  
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
