@@ -1,0 +1,6 @@
+This is a demo to show you how to use rabbitmq for data transfer
+
+1. Run the script, this installs packages (inside a venv if you're not in one) and runs a rabbitmq service on port 15672
+2. Run: source venv/bin/activate
+3. Run producer.py this pushes a message on to the queue
+4. Run consumer.py
