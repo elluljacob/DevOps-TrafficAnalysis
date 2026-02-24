@@ -56,10 +56,15 @@ def on_message_received(ch, method, properties, body):
             print("      - [!] No image data found in message.")
             # ---
 
+        # Ack AFTER processing so RabbitMQ can apply backpressure (prefetch_count=1)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
     except json.JSONDecodeError:
         print(" [!] Error: Could not decode JSON body.")
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
     except Exception as e:
         print(f" [!] An error occurred: {e}")
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
         
 
 def main():
@@ -68,7 +73,8 @@ def main():
     channel = connection.channel()
 
     # Declare the queue (idempotent: does nothing if it already exists)
-    channel.queue_declare(queue=QUEUE_NAME)
+    # Must match the queue properties created by the producer (durable=True)
+    channel.queue_declare(queue=QUEUE_NAME, durable=True)
 
     # Set prefetch count. This tells RabbitMQ not to give more than one
     #    message to a worker at a time until the previous one is processed.
@@ -79,7 +85,8 @@ def main():
     #    as it's received. 
     # 
     # For the real ML pipeline, we could set this to False and manually ack after inference is done.
-    channel.basic_consume(queue=QUEUE_NAME, on_message_callback=on_message_received, auto_ack=True)
+    # Manual ack: lets RabbitMQ slow down delivery if processing is slower than publish rate
+    channel.basic_consume(queue=QUEUE_NAME, on_message_callback=on_message_received, auto_ack=False)
 
     print(f" [*] Consumer started. Waiting for messages in '{QUEUE_NAME}'.")
     print(" [*] A window will open showing the received video frames.")
