@@ -23,7 +23,6 @@ class StreamConfig:
 
 
 def utc_iso_now() -> str:
-    # Example: 2026-02-18T19:29:12.345Z
     return dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
@@ -166,7 +165,7 @@ def stream_capture_loop(
 
             now = time.monotonic()
             if next_emit and now < next_emit:
-                # Discard frames until it's time to emit; tiny sleep avoids busy-loop.
+                # Discard frames until it's time to emit
                 time.sleep(min(0.02, max(0.0, next_emit - now)))
                 continue
 
@@ -301,7 +300,7 @@ def main() -> int:
         while True:
             time.sleep(1.0)
     except KeyboardInterrupt:
-        logging.getLogger("main").info("Stopping...")
+        logging.getLogger("main").info("Stopping")
         stop_event.set()
         for t in cap_threads:
             t.join(timeout=2.0)

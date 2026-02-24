@@ -27,7 +27,8 @@ def main():
     # Establish connection to RabbitMQ and declare the queue
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = connection.channel()
-    channel.queue_declare(queue=QUEUE_NAME)
+    # Must match existing queue properties (durable=True)
+    channel.queue_declare(queue=QUEUE_NAME, durable=True)
 
     print(f" [*] Producer started. Publishing to '{QUEUE_NAME}'")
 
