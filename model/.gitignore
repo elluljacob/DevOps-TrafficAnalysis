@@ -2,3 +2,6 @@
 *.pt
 *.pkl
 *.pyc
+*.mov
+
+/YOLOX_outputs/*

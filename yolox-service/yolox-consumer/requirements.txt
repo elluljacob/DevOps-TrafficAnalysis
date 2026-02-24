@@ -1,0 +1,6 @@
+pika
+opencv-python-headless
+numpy
+torch
+torchvision
+loguru
