@@ -5,8 +5,6 @@ on:
     branches:
       - main
     paths:
-     # Tells github to only run this pipeline if files in the 
-     # dashboard folder change
       - 'dashboard/**'
       - 'stream-processor/**'
       - 'yolox-service/**'
@@ -65,10 +63,9 @@ jobs:
             changed: ${{ needs.detect-changes.outputs.yolox_service }}
 
     # Dynamically skip matrix jobs if their specific folder didn't change, skipped if manual trigger
-    if: ${{ matrix.changed == 'true' || github.event_name == 'workflow_dispatch' }}
-
     steps:
       - name: Checkout repository code
+        if: ${{ matrix.changed == 'true' || github.event_name == 'workflow_dispatch' }}
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
@@ -89,8 +86,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./dashboard 
+          context: ${{ matrix.context }} 
           push: true
           tags: |
-            ghcr.io/${{ env.REPO_LOWERCASE }}/dashboard:latest
-            ghcr.io/${{ env.REPO_LOWERCASE }}/dashboard:${{ github.sha }}
+            ghcr.io/${{ env.REPO_LOWERCASE }}/${{ matrix.image }}:latest
+            ghcr.io/${{ env.REPO_LOWERCASE }}/${{ matrix.image }}:${{ github.sha }}
