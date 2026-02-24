@@ -82,8 +82,16 @@ def load_model():
     model.eval()
 
     logger.info("Loading checkpoint from {}".format(CHECKPOINT_PATH))
+    if not os.path.exists(CHECKPOINT_PATH):
+        raise FileNotFoundError(
+            f"Checkpoint not found at {CHECKPOINT_PATH}. "
+            "Place a YOLOX .pth file there or set CHECKPOINT_PATH env var."
+        )
+
     ckpt = torch.load(CHECKPOINT_PATH, map_location="cpu")
-    model.load_state_dict(ckpt["model"])
+    # Some checkpoints store weights under ckpt['model'], others are a plain state_dict.
+    state_dict = ckpt["model"] if isinstance(ckpt, dict) and "model" in ckpt else ckpt
+    model.load_state_dict(state_dict)
     logger.info("Checkpoint loaded.")
 
     return Predictor(model, exp, COCO_CLASSES, device=DEVICE)
@@ -178,7 +186,8 @@ def main():
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = connection.channel()
-    channel.queue_declare(queue=QUEUE_NAME)
+    # Must match queue properties created by the producer (durable=True)
+    channel.queue_declare(queue=QUEUE_NAME, durable=True)
     channel.basic_qos(prefetch_count=1)
 
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=make_callback(predictor), auto_ack=False)

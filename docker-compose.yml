@@ -1,0 +1,49 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: traffic-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  stream-processor:
+    build: ./stream-processor
+    container_name: stream-processor
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - QUEUE_NAME=edge_frames
+      - FRAME_INTERVAL_S=0.2
+      - JPEG_QUALITY=80
+      - LOG_LEVEL=INFO
+      - STREAMS_FILE=/app/streams.json
+      # Make RTSP ingest more robust (avoid UDP packet loss artifacts)
+      - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp|stimeout;5000000
+    volumes:
+      - ./stream-processor/streams.json:/app/streams.json:ro
+
+
+  yolox-service:
+    build: ./yolox-service/yolox-consumer
+    container_name: yolox-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - QUEUE_NAME=edge_frames
+    restart: unless-stopped
+
