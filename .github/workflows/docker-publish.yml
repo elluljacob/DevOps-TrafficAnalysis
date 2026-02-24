@@ -8,16 +8,64 @@ on:
      # Tells github to only run this pipeline if files in the 
      # dashboard folder change
       - 'dashboard/**'
+      - 'stream-processor/**'
+      - 'yolox-service/**'
   workflow_dispatch:
   
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      dashboard: ${{ steps.filter.outputs.dashboard }}
+      stream_processor: ${{ steps.filter.outputs.stream_processor }}
+      yolox_service: ${{ steps.filter.outputs.yolox_service }}
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Check for file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            dashboard:
+              - 'dashboard/**'
+            stream_processor:
+              - 'stream-processor/**'
+            yolox_service:
+              - 'yolox-service/**'
+
   build-and-push:
+    needs: detect-changes
     runs-on: ubuntu-latest
     
     # Gives the pipeline permission to push packages to GHCR
     permissions:
       contents: read
       packages: write 
+
+    strategy:
+      # Prevent the entire pipeline from failing if just one service fails to build
+      fail-fast: false 
+      matrix:
+        include:
+          - name: dashboard
+            context: ./dashboard
+            image: dashboard
+            changed: ${{ needs.detect-changes.outputs.dashboard }}
+            
+          - name: stream-processor
+            context: ./stream-processor
+            image: stream-processor
+            changed: ${{ needs.detect-changes.outputs.stream_processor }}
+            
+          - name: yolox-service
+            context: ./yolox-service/yolox-consumer 
+            image: yolox-service
+            changed: ${{ needs.detect-changes.outputs.yolox_service }}
+
+    # Dynamically skip matrix jobs if their specific folder didn't change, skipped if manual trigger
+    if: ${{ matrix.changed == 'true' || github.event_name == 'workflow_dispatch' }}
 
     steps:
       - name: Checkout repository code

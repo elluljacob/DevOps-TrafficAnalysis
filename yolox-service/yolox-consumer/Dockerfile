@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && \
       https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_s.pth && \
     apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
-ENV RABBITMQ_HOST=localhost
+ENV RABBITMQ_HOST=rabbitmq
 ENV QUEUE_NAME=edge_frames
 ENV MODEL_NAME=yolox-s
 ENV CHECKPOINT_PATH=/app/weights/yolox_s.pth
