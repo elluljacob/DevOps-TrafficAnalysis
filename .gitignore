@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 weights/
 *.pth
+edge_key
