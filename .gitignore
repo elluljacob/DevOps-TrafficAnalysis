@@ -5,3 +5,4 @@ __pycache__/
 weights/
 *.pth
 edge_key
+.env

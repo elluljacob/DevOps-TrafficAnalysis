@@ -12,6 +12,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY stream_processor.py ./stream_processor.py
+COPY rabbit_publisher.py ./rabbit_publisher.py
 
 CMD ["python", "/app/stream_processor.py", "--streams", "/app/streams.json"]
 
