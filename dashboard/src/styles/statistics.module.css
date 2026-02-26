@@ -1,0 +1,19 @@
+/* ============================================================================
+ *  Pie Charts Row - CSS Grid
+ * ============================================================================ */
+.pieRow {
+    display         : grid;
+    grid-template-columns : repeat(auto-fit, minmax(15rem, 1fr));
+    gap             : 1.25rem;
+    width           : 100%;
+    margin-bottom   : 1rem;
+    margin-bottom   : 1,25rem;
+}
+
+.pieBubble {
+    box-sizing      : border-box;
+}
+
+.pieChartWrapper {
+    height          : 22.8rem;
+}

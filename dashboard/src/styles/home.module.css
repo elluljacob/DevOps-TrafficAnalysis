@@ -1,0 +1,27 @@
+/* ============================================================================
+ *  Home Module Styles
+ * ============================================================================ */
+
+.container {
+    min-height      : 100vh;
+    width           : 100%;
+    background-color: #f0f2f5;
+    overflow        : hidden;
+}
+
+.main {
+    width           : 100%;
+    height          : 100vh;
+    display         : flex;
+    flex-direction  : column;
+}
+
+/* ============================================================================
+ *  Dark Mode Override
+ * ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+    .container {
+        background-color: #09090b;
+    }
+}
