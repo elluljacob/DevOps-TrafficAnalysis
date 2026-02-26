@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY yolox/ ./yolox/
 COPY exps/ ./exps/
+COPY database.py .
 COPY consumer.py .
 
 # Downloads the weights for yolo-s model from official YOLOX GitHub
