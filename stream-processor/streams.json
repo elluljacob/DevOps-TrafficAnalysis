@@ -1,0 +1,6 @@
+[
+  { "stream_id": "cam1", 
+    "location": "L42-canyon", 
+    "url": "rtsp://145.100.135.125:8554/cam2" }
+]
+

@@ -11,13 +11,21 @@ import cv2
 
 import torch
 
+import numpy as np
+import supervision as sv
+
 from yolox.data.data_augment import ValTransform
 from yolox.data.datasets import COCO_CLASSES
 from yolox.exp import get_exp
 from yolox.utils import fuse_model, get_model_info, postprocess, vis
 
+from collections import Counter
+import json
+
 IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 
+box_annotator = sv.BoxAnnotator()
+label_annotator = sv.LabelAnnotator()
 
 def make_parser():
     parser = argparse.ArgumentParser("YOLOX Demo!")
@@ -205,37 +213,116 @@ def image_demo(predictor, vis_folder, path, current_time, save_result):
 
 def imageflow_demo(predictor, vis_folder, current_time, args):
     cap = cv2.VideoCapture(args.path if args.demo == "video" else args.camid)
-    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float
-    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
+
+    vid_writer = None
+    save_folder = None
     if args.save_result:
         save_folder = os.path.join(
             vis_folder, time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
         )
         os.makedirs(save_folder, exist_ok=True)
-        if args.demo == "video":
-            save_path = os.path.join(save_folder, os.path.basename(args.path))
-        else:
-            save_path = os.path.join(save_folder, "camera.mp4")
+        save_path = os.path.join(
+            save_folder,
+            os.path.basename(args.path) if args.demo == "video" else "camera.mp4"
+        )
         logger.info(f"video save_path is {save_path}")
         vid_writer = cv2.VideoWriter(
-            save_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (int(width), int(height))
+            save_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height)
         )
+    else:
+        cv2.namedWindow("yolox", cv2.WINDOW_NORMAL)
+
+    frame_detections = []
+    frame_count = 0
+
     while True:
         ret_val, frame = cap.read()
-        if ret_val:
-            outputs, img_info = predictor.inference(frame)
-            result_frame = predictor.visual(outputs[0], img_info, predictor.confthre)
-            if args.save_result:
-                vid_writer.write(result_frame)
-            else:
-                cv2.namedWindow("yolox", cv2.WINDOW_NORMAL)
-                cv2.imshow("yolox", result_frame)
+        if not ret_val:
+            break
+
+        outputs, img_info = predictor.inference(frame)
+        output = outputs[0]
+        ratio = img_info["ratio"]
+
+        if output is not None:
+            output = output.cpu()
+            bboxes = (output[:, 0:4] / ratio).numpy()
+            scores = (output[:, 4] * output[:, 5]).numpy()
+            class_ids = output[:, 6].int().numpy()
+
+            # Raw per-frame detection counts (pre-tracking)
+            class_name_list = [predictor.cls_names[int(cid)] for cid in class_ids]
+            frame_detections.append({
+                "frame": frame_count,
+                "total_count": len(class_ids),
+                "per_class": dict(Counter(class_name_list))
+            })
+
+            detections = sv.Detections(
+                xyxy=bboxes, confidence=scores, class_id=class_ids
+            )
+
+            labels = [
+                f"{predictor.cls_names[cid]} {conf:.2f}"
+                for cid, conf in zip(detections.class_id, detections.confidence)
+            ]
+            result_frame = box_annotator.annotate(scene=frame.copy(), detections=detections)
+            result_frame = label_annotator.annotate(scene=result_frame, detections=detections, labels=labels)
+        else:
+            result_frame = frame
+            frame_detections.append({
+                "frame": frame_count,
+                "total_count": 0,
+                "per_class": {}
+            })
+
+        if args.save_result:
+            vid_writer.write(result_frame)
+        else:
+            cv2.imshow("yolox", result_frame)
             ch = cv2.waitKey(1)
             if ch == 27 or ch == ord("q") or ch == ord("Q"):
                 break
-        else:
-            break
+
+        frame_count += 1
+
+    # Cleanup
+    cap.release()
+    if vid_writer is not None:
+        vid_writer.release()
+    cv2.destroyAllWindows()
+
+    output_dir = save_folder or vis_folder or "."
+    summary_path = os.path.join(output_dir, "detection_summary.txt")
+    with open(summary_path, "w") as f:
+        f.write("=== Per-Frame Detection Summary ===\n\n")
+        if frame_detections:
+            counts = [entry["total_count"] for entry in frame_detections]
+            avg_count = sum(counts) / len(counts)
+            max_count = max(counts)
+            min_count = min(counts)
+            max_frame = counts.index(max_count)
+            f.write(f"Total frames analyzed: {len(frame_detections)}\n")
+            f.write(f"Average detections per frame: {avg_count:.1f}\n")
+            f.write(f"Max detections in a single frame: {max_count} (frame {max_frame})\n")
+            f.write(f"Min detections in a single frame: {min_count}\n")
+
+            total_class_counts = Counter()
+            for entry in frame_detections:
+                total_class_counts.update(entry["per_class"])
+            f.write(f"\nTotal detections by class (summed across all frames):\n")
+            for cls_name, count in total_class_counts.most_common():
+                f.write(f"  {cls_name}: {count}\n")
+
+    logger.info(f"Detection summary saved to {summary_path}")
+
+    frame_counts_path = os.path.join(output_dir, "frame_counts.json")
+    with open(frame_counts_path, "w") as f:
+        json.dump(frame_detections, f, indent=2)
+    logger.info(f"Per-frame detection counts saved to {frame_counts_path}")
 
 
 def main(exp, args):

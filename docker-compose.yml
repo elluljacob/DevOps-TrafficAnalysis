@@ -1,0 +1,52 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: traffic-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    command: >
+      bash -c "rabbitmq-plugins enable rabbitmq_shovel rabbitmq_shovel_management; 
+      docker-entrypoint.sh rabbitmq-server"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  stream-processor:
+    build: ./stream-processor
+    container_name: stream-processor
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - QUEUE_NAME=edge_frames
+      - FRAME_INTERVAL_S=0.2
+      - JPEG_QUALITY=80
+      - LOG_LEVEL=INFO
+      - STREAMS_FILE=/app/streams.json
+      - AWS_MQ_URI=amqps://${AWS_MQ_USER}:${AWS_MQ_PASSWORD}@b-e20c8d29-cf33-486e-9d0c-45e3efc92eaf.mq.eu-north-1.on.aws:5671?cacertfile=/etc/ssl/certs/ca-certificates.crt&verify=verify_none
+      - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp|stimeout;5000000
+    volumes:
+      - ./stream-processor/streams.json:/app/streams.json:ro
+
+
+  yolox-service:
+    build: ./yolox-service/yolox-consumer
+    container_name: yolox-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - QUEUE_NAME=edge_frames
+    restart: unless-stopped
+

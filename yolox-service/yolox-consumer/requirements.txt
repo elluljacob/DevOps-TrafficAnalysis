@@ -1,0 +1,8 @@
+pika
+opencv-python-headless
+numpy
+torch
+torchvision
+loguru
+tabulate
+thop

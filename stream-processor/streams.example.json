@@ -1,0 +1,13 @@
+[
+  {
+    "stream_id": "camera-stream-001",
+    "location": "edge-location-bldg4-floor2",
+    "url": "rtsp://USER:PASS@MEDIA_SERVER_HOST:554/stream1"
+  },
+  {
+    "stream_id": "camera-stream-002",
+    "location": "edge-location-bldg4-floor3",
+    "url": "http://MEDIA_SERVER_HOST:8080/live/cam2.m3u8"
+  }
+]
+

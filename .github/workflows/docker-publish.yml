@@ -1,0 +1,58 @@
+name: Build and Push Services to GHCR
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dashboard/**'
+      - 'stream-processor/**'
+      - 'yolox-service/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      dashboard: ${{ steps.filter.outputs.dashboard }}
+      stream_processor: ${{ steps.filter.outputs.stream_processor }}
+      yolox_service: ${{ steps.filter.outputs.yolox_service }}
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+      - name: Check for file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            dashboard: 'dashboard/**'
+            stream_processor: 'stream-processor/**'
+            yolox_service: 'yolox-service/**'
+
+  build-dashboard:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.dashboard == 'true' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      image_name: dashboard
+      build_context: ./dashboard
+
+  build-stream-processor:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.stream_processor == 'true' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      image_name: stream-processor
+      build_context: ./stream-processor
+
+  build-yolox-service:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.yolox_service == 'true' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      image_name: yolox-service
+      build_context: ./yolox-service/yolox-consumer
