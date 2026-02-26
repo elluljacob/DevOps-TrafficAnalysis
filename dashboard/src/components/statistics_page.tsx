@@ -66,13 +66,16 @@ function TrafficChartTimeline({
  * Pie Charts
  * ============================================================================
  */
-function SimplePieCharts({ pie }: { pie: PieChartStat[] }) {
+function SimplePieCharts({ pieCharts }: { pieCharts: PieChartStat[][] }) {
     return (
         <div className={st_styles.pieRow}>
-            {[1, 2].map((id) => (
-                <div key={id} className={`${cd_styles.bubble} ${st_styles.pieBubble}`}>
+            {pieCharts.map((pie, index) => (
+                <div
+                    key={index}
+                    className={`${cd_styles.bubble} ${st_styles.pieBubble}`}
+                >
                     <h3 className={cd_styles.thirdHeaderFormat}>
-                        Zone Data Alpha-{id}
+                        Zone Data Alpha-{index + 1}
                     </h3>
 
                     <div className={st_styles.pieChartWrapper}>
@@ -116,7 +119,7 @@ export default function StatisticsPage({
 }: Props) {
     return (
         <>
-            <SimplePieCharts pie={pie} />
+            <SimplePieCharts pieCharts={[pie, pie]} />
             <TrafficChartTimeline history={history} />
         </>
     )

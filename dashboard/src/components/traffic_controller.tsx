@@ -3,6 +3,13 @@
 import { TimeRange }    from '@/types/stats'
 import tc_styles        from '@/styles/traffic_controls.module.css'
 import cd_styles        from '@/styles/common_dashboard.module.css'
+import dynamic from "next/dynamic";
+
+// Load the map component only on the client side
+const Map = dynamic(() => import("@/components/filtermap"), { 
+  ssr: false,
+  loading: () => <div style={{ height: "400px", background: "#eee" }}>Loading Map...</div>
+});
 
 /* ============================================================================
  * StatusItem Component
@@ -85,6 +92,11 @@ interface Props {
     setRange: (val: TimeRange) => void
 }
 
+const cameraList = [
+    { id: 1, name: 'Camera A', lat: 51.505, lng: -0.09, enabled: true },
+    { id: 2, name: 'Camera B', lat: 51.51, lng: -0.1, enabled: false },
+    // ...
+]
 export default function TrafficControls({ range, setRange }: Props) {
     return (
         /* ------------- Bubble ------------------------ */
@@ -104,6 +116,12 @@ export default function TrafficControls({ range, setRange }: Props) {
             </h3>
 
             <TrafficControlStatus />
+
+            
+            <div className={tc_styles.sectionSeparator}></div>
+
+            <h3 className={cd_styles.thirdHeaderFormat}>Camera Map</h3>
+            <Map center={[51.505, -0.09]} zoom={13} />
         </div>
     )
 }
