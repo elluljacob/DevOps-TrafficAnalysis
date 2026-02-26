@@ -13,19 +13,24 @@
  * ============================================================================ */
 
 .container {
-    display           : flex;
-    flex-direction    : column;
-    gap               : 1rem;
     font-family       : var(--font-mono);
-    background-color  : #111111;         /* pure dark background */
-    color             : #e5e7eb;         /* light gray text */
     padding           : 1rem;
     border-radius     : 0.5rem;
-    height            : 100vh;           /* full height sidebar */
+    height            : 100%;           /* full height sidebar */
     box-sizing        : border-box;
+
+    overflow-y        : auto;
+    overflow-x        : hidden;
 }
 
+.container::-webkit-scrollbar {
+    width: 6px;
+}
 
+.container::-webkit-scrollbar-thumb {
+    background-color: #333;
+    border-radius: 10px;
+}
 /* ============================================================================
  *  Dropdown Wrapper
  * ============================================================================ */
@@ -142,4 +147,16 @@
     font-family        : var(--font-mono);
     font-weight        : 700;
     color              : #e5e7eb;          /* bright enough for contrast */
+}
+
+
+
+/* ============================================================================
+ *  Map
+ * ============================================================================ */
+
+.mapFilter{
+    height          : 100%;
+    min-height      : 5rem;
+    width           : 100%;
 }

@@ -18,3 +18,36 @@
 .pieChartWrapper {
     height                 : 22.8rem; /* ~365px */
 }
+
+
+
+.crosshair-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crosshair {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid white;
+  position: relative;
+  background-color: #ef4444; /* Default Red */
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+  transition: background-color 0.2s ease;
+}
+
+.crosshair.active {
+  background-color: #22c55e; /* Active Green */
+}
+
+/* The "Cross" lines */
+.crosshair::before, .crosshair::after {
+  content: '';
+  position: absolute;
+  background-color: white;
+}
+
+.crosshair::before { width: 10px; height: 2px; top: 7px; left: 3px; } /* Horizontal */
+.crosshair::after { width: 2px; height: 10px; top: 3px; left: 7px; }  /* Vertical */
