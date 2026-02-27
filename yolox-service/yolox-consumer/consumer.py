@@ -219,16 +219,13 @@ def main():
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
 
-    # --- MUST MATCH PUBLISHER EXACTLY ---
-    args = {
-        "x-max-length": 20,
-        "x-overflow": "drop-head",
-        "x-dead-letter-exchange": "dlx_overflow",
-        "x-dead-letter-routing-key": QUEUE_NAME
-    }
-    
     # Declare with the identical arguments dictionary
-    channel.queue_declare(queue=QUEUE_NAME, durable=True, arguments=args)
+    try:
+        channel.queue_declare(queue=QUEUE_NAME, durable=True, passive=True)
+        logger.info(f"Connected to existing queue: {QUEUE_NAME}")
+    except pika.exceptions.ChannelClosedByBroker:
+        logger.critical(f"Queue '{QUEUE_NAME}' not found! Is the Producer running?")
+    raise
     # ------------------------------------
 
     channel.basic_qos(prefetch_count=1)

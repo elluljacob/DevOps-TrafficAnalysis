@@ -42,6 +42,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      stream-processor:
+        condition: service_healthy
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
