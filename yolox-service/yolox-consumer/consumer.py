@@ -224,8 +224,11 @@ def main():
         channel.queue_declare(queue=QUEUE_NAME, durable=True, passive=True)
         logger.info(f"Connected to existing queue: {QUEUE_NAME}")
     except pika.exceptions.ChannelClosedByBroker:
-        logger.critical(f"Queue '{QUEUE_NAME}' not found! Is the Producer running?")
-    raise
+        logger.error(f"Queue {QUEUE_NAME} does not exist! Please create it via the MQ console or a producer.")
+        raise 
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        raise
     # ------------------------------------
 
     channel.basic_qos(prefetch_count=1)
