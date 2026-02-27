@@ -5,6 +5,7 @@ import base64
 from collections import Counter
 from database import DynamoDBWriter
 
+import ssl
 import pika
 import cv2
 import numpy as np
@@ -18,6 +19,10 @@ from yolox.utils import get_model_info, postprocess
 
 
 RABBITMQ_HOST   = os.getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", "5672"))
+RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
+RABBITMQ_PASS = os.getenv("RABBITMQ_PASSWORD", "guest")
+
 QUEUE_NAME      = os.getenv("QUEUE_NAME", "edge_frames")
 MODEL_NAME      = os.getenv("MODEL_NAME", "yolox-s")
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "/app/weights/yolox_s.pth")
@@ -193,7 +198,25 @@ def main():
     predictor = load_model()
     db_writer = DynamoDBWriter()
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
+    # Setup Credentials
+    credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
+    
+    # AWS/SSL Logic: Use SSL if port is 5671
+    ssl_options = None
+    if RABBITMQ_PORT == 5671:
+        logger.info("Configuring SSL for Amazon MQ")
+        context = ssl.create_default_context()
+        ssl_options = pika.SSLOptions(context)
+
+    parameters = pika.ConnectionParameters(
+        host=RABBITMQ_HOST,
+        port=RABBITMQ_PORT,
+        credentials=credentials,
+        ssl_options=ssl_options,
+        heartbeat=600
+    )
+
+    connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
 
     # --- MUST MATCH PUBLISHER EXACTLY ---
