@@ -19,6 +19,7 @@ from yolox.utils import get_model_info, postprocess
 
 
 RABBITMQ_HOST   = os.getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST", "/")
 RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", "5672"))
 RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
 RABBITMQ_PASS = os.getenv("RABBITMQ_PASSWORD", "guest")
@@ -206,11 +207,14 @@ def main():
     if RABBITMQ_PORT == 5671:
         logger.info("Configuring SSL for Amazon MQ")
         context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
         ssl_options = pika.SSLOptions(context)
 
     parameters = pika.ConnectionParameters(
         host=RABBITMQ_HOST,
         port=RABBITMQ_PORT,
+        virtual_host=RABBITMQ_VHOST,
         credentials=credentials,
         ssl_options=ssl_options,
         heartbeat=600

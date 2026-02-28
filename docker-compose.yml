@@ -30,7 +30,7 @@ services:
       - JPEG_QUALITY=80
       - LOG_LEVEL=INFO
       - STREAMS_FILE=/app/streams.json
-      - AWS_MQ_URI=amqps://${AWS_MQ_USER}:${AWS_MQ_PASSWORD}@b-e20c8d29-cf33-486e-9d0c-45e3efc92eaf.mq.eu-north-1.on.aws:5671?cacertfile=/etc/ssl/certs/ca-certificates.crt&verify=verify_none
+      - AWS_MQ_URI=amqps://upeutcmd:${AWS_MQ_PASSWORD}@raccoon.lmq.cloudamqp.com/upeutcmd?verify=verify_none
       - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp|stimeout;5000000
     volumes:
       - ./stream-processor/streams.json:/app/streams.json:ro
