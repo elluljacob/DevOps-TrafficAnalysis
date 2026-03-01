@@ -1,6 +1,11 @@
 [
   { "stream_id": "cam1", 
     "location": "L42-canyon", 
-    "url": "rtsp://145.100.135.125:8554/cam2" }
+    "url": "rtsp://145.100.135.125:8554/cam1" },
+    { "stream_id": "cam2", 
+    "location": "SP-cliff", 
+    "url": "rtsp://145.100.135.125:8554/cam2" },
+    { "stream_id": "cam3", 
+    "location": "BM-horizon", 
+    "url": "rtsp://145.100.135.125:8554/cam3" }
 ]
-

@@ -170,7 +170,6 @@ def make_parser() -> argparse.ArgumentParser:
     p.add_argument("--rabbitmq-port", type=int, default=int(os.environ.get("RABBITMQ_PORT", "5672")))
     p.add_argument("--rabbitmq-username", default=os.environ.get("RABBITMQ_USERNAME", "guest"))
     p.add_argument("--rabbitmq-password", default=os.environ.get("RABBITMQ_PASSWORD", "guest"))
-    # NEW: AWS URI argument
     p.add_argument("--aws-mq-uri", default=os.environ.get("AWS_MQ_URI", ""))
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--log-level", default=os.environ.get("LOG_LEVEL", "INFO"))
