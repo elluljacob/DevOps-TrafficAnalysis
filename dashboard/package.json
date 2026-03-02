@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.999.0",
+    "@aws-sdk/lib-dynamodb": "^3.999.0",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
     "leaflet": "^1.9.4",
@@ -29,5 +31,8 @@
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "fast-xml-parser": "5.4.1"
   }
 }

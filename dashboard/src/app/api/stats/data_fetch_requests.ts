@@ -1,6 +1,5 @@
-import { PieChartStat, HistoryDataPoint, TimeRange, DashboardResponse } from "@/types/stats";
+import { PieChartStat, HistoryDataPoint, TimeRange, DashboardResponse, TrafficEntry } from "@/types/stats";
 import { log, LogLevel } from "@/lib/logger"; 
-import { connectToDatabase } from "@/lib/database"
 
 /* ============================================================================
  * Traffic Categories
@@ -17,7 +16,7 @@ const labels = ['Cars', 'Bikes', 'Buses', 'Trucks', 'Pedestrians'];
  * Adjusts data density (points/frequency) based on the requested TimeRange.
  * ============================================================================
  */
-function generateMockHistory(range: TimeRange, fromDate?: string): HistoryDataPoint[] {
+export function generateMockHistory(range: TimeRange, fromDate?: string): HistoryDataPoint[] {
     const now           = new Date();
     const data: HistoryDataPoint[] = [];
     let points          = 60; 
@@ -60,13 +59,23 @@ function generateMockHistory(range: TimeRange, fromDate?: string): HistoryDataPo
 function getMockData(range: TimeRange): DashboardResponse {
     const history = generateMockHistory(range);
     const lastPoint = history[history.length - 1];
-    
+
     const pie: PieChartStat[] = labels.map(label => ({
         label,
         value: Number(lastPoint[label]) || 0
     }));
 
-    return { pie, history };
+    const traffic_entry: TrafficEntry[] = [
+        {
+            camera: "Cam1",
+            data: pie
+        }
+    ];
+
+    return {
+        traffic_entry,
+        history
+    };
 }
 
 /* ============================================================================
@@ -77,7 +86,6 @@ function getMockData(range: TimeRange): DashboardResponse {
  * ============================================================================
  */
 async function getRealData(range: TimeRange): Promise<DashboardResponse> {
-    await connectToDatabase();
     // TODO: Implement Aggregation Pipeline based on 'range'
     return getMockData(range); 
 }
@@ -91,7 +99,7 @@ async function getRealData(range: TimeRange): Promise<DashboardResponse> {
  */
 export async function getStats(range: TimeRange = '1h'): Promise<DashboardResponse> {
     const useMock = process.env.USE_MOCK_DATA === "true";
-    log(`Fetching stats for range: ${range} (Mock: ${useMock})`, LogLevel.INFO);
+    //log(`Fetching stats for range: ${range} (Mock: ${useMock})`, LogLevel.INFO);
 
     if (useMock) {
         return getMockData(range);

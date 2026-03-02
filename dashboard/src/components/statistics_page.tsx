@@ -5,6 +5,7 @@ import LineChart    from '@/components/chart_generators/generate_linechart'
 import st_styles    from '@/styles/statistics.module.css'
 import cd_styles    from '@/styles/common_dashboard.module.css'
 import { PieChartStat, HistoryDataPoint, TimeRange } from '@/types/stats'
+import { log, LogLevel } from '@/lib/logger'
 
 /* ============================================================================
  * TrafficChartTimeline Component
@@ -75,21 +76,25 @@ function TrafficChartTimeline({
  * distribution data across different zones.
  * ============================================================================
  */
-function SimplePieCharts({ pieCharts }: { pieCharts: PieChartStat[][] }) {
+function SimplePieCharts({
+    trafficEntries
+}: {
+    trafficEntries: { camera: string; data: PieChartStat[] }[]
+}) {
     return (
         <div className={st_styles.pieRow}>
-            {pieCharts.map((pie, index) => (
+            {trafficEntries.map((entry, index) => (
                 <div
                     key={index}
                     className={`${cd_styles.bubble} ${st_styles.pieBubble}`}
                 >
                     <h3 className={cd_styles.thirdHeaderFormat}>
-                        Zone Data Alpha-{index + 1}
+                        {entry.camera}
                     </h3>
 
                     <div className={st_styles.pieChartWrapper}>
                         <PieChart
-                            data={pie}
+                            data={entry.data}
                             config={{
                                 labelKey       : 'label',
                                 valueKey       : 'value',
@@ -121,9 +126,12 @@ function SimplePieCharts({ pieCharts }: { pieCharts: PieChartStat[][] }) {
  * ============================================================================
  */
 function useTrafficData(range: TimeRange) {
-    const [data, setData] = useState<{ pie: PieChartStat[], history: HistoryDataPoint[] }>({ 
-        pie: [], 
-        history: [] 
+    const [data, setData] = useState<{
+        traffic_entry: { camera: string; data: PieChartStat[] }[],
+        history: HistoryDataPoint[]
+    }>({
+        traffic_entry: [],
+        history: []
     });
 
     const rangeRef = useRef(range);
@@ -134,8 +142,8 @@ function useTrafficData(range: TimeRange) {
             const res = await fetch(`/api/stats?range=${rangeRef.current}`);
             const result = await res.json();
             setData(result);
-        } catch (err) { 
-            console.error("Fetch error:", err); 
+        } catch (err) {
+            console.error("Fetch error:", err);
         }
     };
 
@@ -160,12 +168,11 @@ interface Props {
 }
 
 export default function StatisticsPage({ range }: Props) {
-    // One line handles all the logic!
-    const { pie, history } = useTrafficData(range);
+    const { traffic_entry, history } = useTrafficData(range);
 
     return (
         <>
-            <SimplePieCharts pieCharts={[pie, pie]} />
+            <SimplePieCharts trafficEntries={traffic_entry} />
             <TrafficChartTimeline history={history} />
         </>
     );
