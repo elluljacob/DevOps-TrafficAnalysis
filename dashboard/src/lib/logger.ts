@@ -15,6 +15,7 @@ export enum LogLevel {
     INFO    = 'info',
     WARN    = 'warn',
     ERROR   = 'error',
+    DEBUG   = 'debug',
 }
 
 /* ============================================================================
@@ -23,7 +24,7 @@ export enum LogLevel {
  * Logs are written to server.log in project root
  * ============================================================================
  */
-const logFile = path.join(process.cwd(), 'server.log')
+const logFile = path.join(process.cwd(), 'logs', 'server.log');
 
 /* ============================================================================
  *  Console logging toggle
@@ -68,6 +69,7 @@ const colours: Record<LogLevel, string> = {
     [LogLevel.INFO]     : '\x1b[32m',   // green
     [LogLevel.WARN]     : '\x1b[33m',   // yellow
     [LogLevel.ERROR]    : '\x1b[31m',   // red
+    [LogLevel.DEBUG]    : '\x1b[31m',   // yellow
 }
 const reset = '\x1b[0m'
 

@@ -3,6 +3,14 @@
 import { TimeRange }    from '@/types/stats'
 import tc_styles        from '@/styles/traffic_controls.module.css'
 import cd_styles        from '@/styles/common_dashboard.module.css'
+import dynamic from "next/dynamic";
+import { useState } from 'react';
+
+// Load the map component only on the client side
+const Map = dynamic(() => import("@/components/filtermap"), { 
+  ssr: false,
+  loading: () => <div style={{ height: "400px", background: "#eee" }}>Loading Map...</div>
+});
 
 /* ============================================================================
  * StatusItem Component
@@ -86,9 +94,24 @@ interface Props {
 }
 
 export default function TrafficControls({ range, setRange }: Props) {
+
+    const [cameras, setCameras] = useState([
+        { id: 1, name: "Camera A", lat: 51.505, lng: -0.09, enabled: true },
+        { id: 2, name: "Camera B", lat: 51.51, lng: -0.1, enabled: false },
+    ]);
+
+    const toggleCamera = (id: number) => {
+        setCameras((prev) =>
+            prev.map((cam) =>
+                cam.id === id
+                    ? { ...cam, enabled: !cam.enabled }
+                    : cam
+            )
+        );
+    };
+
     return (
-        /* ------------- Bubble ------------------------ */
-        <div className={cd_styles.bubble}>
+        <div className={`${cd_styles.bubble} ${tc_styles.container}`}>
             <h2 className={cd_styles.secondHeaderFormat}>Control Center</h2>
 
             <h3 className={cd_styles.thirdHeaderFormat}>
@@ -104,6 +127,18 @@ export default function TrafficControls({ range, setRange }: Props) {
             </h3>
 
             <TrafficControlStatus />
+
+            <div className={tc_styles.sectionSeparator}></div>
+
+            <h3 className={cd_styles.thirdHeaderFormat}>Camera Map</h3>
+
+            <div className={tc_styles.mapFilter}>
+                <Map
+                    cameras={cameras}
+                    toggleCamera={toggleCamera}
+                    zoom={13}
+                />
+            </div>
         </div>
-    )
+    );
 }

@@ -1,22 +1,17 @@
 services:
   app:
+    container_name: dashboard-container
     build: .
     ports:
       - "3000:3000"
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/traffic_db
-      - USE_MOCK_DATA=${USE_MOCK_DATA:-true} # Defaults to true if not set
+
+      - DYNAMODB_ENDPOINT=https://dynamodb.eu-north-1.amazonaws.com
+      - AWS_REGION=eu-north-1
+      - DYNAMO_TABLE_NAME=Traffic-Metrics
+
+      - USE_MOCK_DATA=false # Defaults to true if not set
     volumes:
       - .:/app
       - /app/node_modules
-    depends_on:
-      - mongo
-  mongo:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-
-volumes:
-  mongo-data:
+      - ./logs:/app/logs
