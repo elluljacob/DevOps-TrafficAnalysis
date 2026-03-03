@@ -26,11 +26,11 @@ services:
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
       - QUEUE_NAME=edge_frames
-      - FRAME_INTERVAL_S=0.2
+      - FRAME_INTERVAL_S=1.0
       - JPEG_QUALITY=80
       - LOG_LEVEL=INFO
       - STREAMS_FILE=/app/streams.json
-      - AWS_MQ_URI=amqps://upeutcmd:${AWS_MQ_PASSWORD}@raccoon.lmq.cloudamqp.com/upeutcmd?verify=verify_none
+      - AWS_MQ_URI=amqp://${AWS_MQ_USERNAME}:${AWS_MQ_PASSWORD}@16.171.53.75:5672
       - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp|stimeout;5000000
     volumes:
       - ./stream-processor/streams.json:/app/streams.json:ro
