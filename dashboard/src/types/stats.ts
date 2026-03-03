@@ -5,11 +5,15 @@
  * Some format for a pie chart statistic
  * ============================================================================
  */
-
 export type PieChartStat = {
   label: string
   value: number
 }
+export type TrafficEntry = {
+  camera: String
+  data : PieChartStat[]
+}
+
 
 export interface HistoryDataPoint {
   timestamp: string; // ISO string
@@ -17,7 +21,7 @@ export interface HistoryDataPoint {
 }
 
 export interface DashboardResponse {
-  pie: PieChartStat[];
+  traffic_entry: TrafficEntry[];
   history: HistoryDataPoint[];
 }
 
