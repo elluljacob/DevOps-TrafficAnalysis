@@ -3,7 +3,7 @@ import json
 import time
 import base64
 from collections import Counter
-from database import DynamoDBWriter
+from database import PostgresWriter
 
 import ssl
 import pika
@@ -160,7 +160,7 @@ def make_callback(predictor, db_writer):
             # Run YOLOX inference
             result = process_frame(predictor, frame)
 
-            # Temporary json logging, eventually write to dynamoDB
+            
             log_entry = {
                 "timestamp": timestamp,
                 "stream_id": stream_id,
@@ -175,8 +175,7 @@ def make_callback(predictor, db_writer):
                 location=message.get("location"),
                 result=result
             )
-            logger.info("Wrote to DynamoDB - remove after working")
-
+            
             if DISPLAY_OUTPUT:
                 cv2.putText(frame, f"Total Count: {result['total_count']}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                 cv2.imshow("YOLOX Inference", frame)
@@ -197,7 +196,7 @@ def make_callback(predictor, db_writer):
 
 def main():
     predictor = load_model()
-    db_writer = DynamoDBWriter()
+    db_writer = PostgresWriter()
 
     # Setup Credentials
     credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)

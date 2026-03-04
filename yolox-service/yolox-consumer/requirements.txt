@@ -6,4 +6,4 @@ torchvision
 loguru
 tabulate
 thop
-boto3
+psycopg2-binary

@@ -163,7 +163,7 @@ def publisher_loop(
 def make_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Stream processor")
     p.add_argument("--streams", default=os.environ.get("STREAMS_FILE", "streams.json"))
-    p.add_argument("--interval", type=float, default=float(os.environ.get("FRAME_INTERVAL_S", "0.2")))
+    p.add_argument("--interval", type=float, default=float(os.environ.get("FRAME_INTERVAL_S", "1")))
     p.add_argument("--jpeg-quality", type=int, default=int(os.environ.get("JPEG_QUALITY", "80")))
     p.add_argument("--queue-name", default=os.environ.get("QUEUE_NAME", "edge_frames"))
     p.add_argument("--rabbitmq-host", default=os.environ.get("RABBITMQ_HOST", "localhost"))
@@ -190,7 +190,7 @@ def main() -> int:
         username=args.rabbitmq_username,
         password=args.rabbitmq_password,
         queue_name=args.queue_name,
-        aws_mq_uri=args.aws_mq_uri, # Pass the AWS info!
+        aws_mq_uri=args.aws_mq_uri, # Pass the AWS info
     )
 
     pub_thread = threading.Thread(target=publisher_loop, name="publisher", daemon=True, args=(publisher, out_q, stop_event, bool(args.dry_run)))
