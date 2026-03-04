@@ -1,0 +1,55 @@
+name: Run Tests
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      runtime:
+        required: true
+        type: string   # 'node' | 'python'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.service }}
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      # --- Node ---
+      - name: Set up Node.js
+        if: inputs.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ${{ inputs.service }}/package-lock.json
+
+      - name: Install Node dependencies
+        if: inputs.runtime == 'node'
+        run: npm ci
+
+      - name: Run Node tests
+        if: inputs.runtime == 'node'
+        run: npm run test:ci
+
+      # --- Python ---
+      - name: Set up Python
+        if: inputs.runtime == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        if: inputs.runtime == 'python'
+        run: pip install -r requirements.txt
+
+      - name: Run Python tests
+        if: inputs.runtime == 'python'
+        run: pytest --tb=short

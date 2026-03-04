@@ -33,6 +33,14 @@ jobs:
             stream_processor: 'stream-processor/**'
             yolox_service: 'yolox-service/**'
 
+  test-dashboard:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.dashboard == 'true' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/run-tests.yml
+    with:
+      service: dashboard
+      runtime: node
+
   build-dashboard:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.dashboard == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -40,6 +48,14 @@ jobs:
     with:
       image_name: dashboard
       build_context: ./dashboard
+
+  # test-stream-processor:
+  #   needs: detect-changes
+  #   if: ${{ needs.detect-changes.outputs.stream_processor == 'true' || github.event_name == 'workflow_dispatch' }}
+  #   uses: ./.github/workflows/run-tests.yml
+  #   with:
+  #     service: stream-processor
+  #     runtime: python
 
   build-stream-processor:
     needs: detect-changes
@@ -49,6 +65,14 @@ jobs:
       image_name: stream-processor
       build_context: ./stream-processor
 
+  # test-yolox-service:
+  #   needs: detect-changes
+  #   if: ${{ needs.detect-changes.outputs.yolox_service == 'true' || github.event_name == 'workflow_dispatch' }}
+  #   uses: ./.github/workflows/run-tests.yml
+  #   with:
+  #     service: yolox-service
+  #     runtime: python
+  
   build-yolox-service:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.yolox_service == 'true' || github.event_name == 'workflow_dispatch' }}
