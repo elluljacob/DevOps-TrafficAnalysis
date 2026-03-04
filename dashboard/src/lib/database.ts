@@ -34,6 +34,7 @@ async function createPostgresPool(): Promise<Pool> {
                 password : process.env.DB_PASSWORD,
                 database : process.env.DB_NAME,
                 max      : 10, // max connections
+                ssl      : { rejectUnauthorized: false },
             });
 
             // Test connection
