@@ -1,7 +1,6 @@
 // lib/database.ts
 
 import { Pool } from "pg";
-import { log, LogLevel } from "./logger";
 
 const MAX_RETRIES = parseInt(process.env.DB_RETRY_MAX ?? "50", 10);
 const RETRY_INTERVAL = parseInt(process.env.DB_RETRY_INTERVAL_MS ?? "5000", 10);
@@ -26,27 +25,27 @@ async function createPostgresPool(): Promise<Pool> {
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
-            log(`[Postgres] Init attempt ${attempt}/${MAX_RETRIES}`, LogLevel.INFO);
+            console.log(`[Postgres] Init attempt ${attempt}/${MAX_RETRIES}`);
 
             const pool = new Pool({
-                host        : process.env.DB_HOST,
-                port        : Number(process.env.DB_PORT ?? 5432),
-                user        : process.env.DB_USER,
-                password    : process.env.DB_PASSWORD,
-                database    : process.env.DB_NAME,
-                max         : 10, // max connections
+                host     : process.env.DB_HOST,
+                port     : Number(process.env.DB_PORT ?? 5432),
+                user     : process.env.DB_USER,
+                password : process.env.DB_PASSWORD,
+                database : process.env.DB_NAME,
+                max      : 10, // max connections
             });
 
             // Test connection
             await pool.query("SELECT 1");
 
-            log("[Postgres] Connected and ping successful", LogLevel.INFO);
+            console.log("[Postgres] Connected and ping successful");
 
             return pool;
         } catch (err) {
             lastError = err;
 
-            log(`[Postgres] Connection failed (attempt ${attempt}): ${err}`, LogLevel.ERROR);
+            console.error(`[Postgres] Connection failed (attempt ${attempt}):`, err);
 
             if (attempt < MAX_RETRIES) {
                 await sleep(RETRY_INTERVAL);
