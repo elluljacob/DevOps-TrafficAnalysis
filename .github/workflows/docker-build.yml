@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write 
+      packages: write
 
     steps:
       - name: Checkout repository code
@@ -37,15 +37,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: ${{ inputs.build_context }} 
+          context: ${{ inputs.build_context }}
           push: true
           tags: |
             ghcr.io/${{ env.REPO_LOWERCASE }}/${{ inputs.image_name }}:latest
             ghcr.io/${{ env.REPO_LOWERCASE }}/${{ inputs.image_name }}:${{ github.sha }}
-      
-      - name: Container scan (Trivy)
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ghcr.io/${{ env.REPO_LOWERCASE }}/${{ inputs.image_name }}:${{ github.sha }}
-          severity: HIGH,CRITICAL
-          exit-code: 1

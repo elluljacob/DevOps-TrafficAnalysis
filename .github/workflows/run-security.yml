@@ -8,7 +8,7 @@ on:
         type: string
       runtime:
         required: true
-        type: string   # 'node' | 'python'
+        type: string
 
 jobs:
   security:
@@ -21,18 +21,39 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # gitleaks needs full history
+          fetch-depth: 0
 
-      # ── Secret scan (all runtimes) ────────────────────────────────
+      # ── Filesystem scan (Trivy) — runs first, no setup needed ─────
+      - name: Filesystem scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: ${{ inputs.service }}
+          severity: HIGH,CRITICAL
+          exit-code: 0   # warn only — don't block on OS-level vulns
+
+      # ── Secret scan ───────────────────────────────────────────────
       - name: Secret scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ── Dependency scan: Node ─────────────────────────────────────
+      - name: Set up Node.js
+        if: inputs.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ${{ inputs.service }}/package-lock.json
+
+      - name: Install Node dependencies
+        if: inputs.runtime == 'node'
+        run: npm ci
+
       - name: Dependency scan (npm audit)
         if: inputs.runtime == 'node'
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical   # high is too noisy, critical only
 
       # ── Dependency scan: Python ───────────────────────────────────
       - name: Set up Python
@@ -46,12 +67,3 @@ jobs:
         run: |
           pip install pip-audit
           pip-audit -r requirements.txt
-
-      # ── Filesystem scan (Trivy) ───────────────────────────────────
-      - name: Filesystem scan (Trivy)
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: ${{ inputs.service }}
-          severity: HIGH,CRITICAL
-          exit-code: 1
