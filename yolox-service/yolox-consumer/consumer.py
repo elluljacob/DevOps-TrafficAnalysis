@@ -28,8 +28,9 @@ QUEUE_NAME      = os.getenv("QUEUE_NAME", "edge_frames")
 MODEL_NAME      = os.getenv("MODEL_NAME", "yolox-s")
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "/app/weights/yolox_s.pth")
 DEVICE          = os.getenv("DEVICE", "cpu")
-CONF_THRESHOLD  = float(os.getenv("CONF_THRESHOLD", "0.3"))
-NMS_THRESHOLD   = float(os.getenv("NMS_THRESHOLD", "0.3"))
+TEST_SIZE       = int(os.getenv("TEST_SIZE", "1024"))
+CONF_THRESHOLD  = float(os.getenv("CONF_THRESHOLD", "0.20"))
+NMS_THRESHOLD   = float(os.getenv("NMS_THRESHOLD", "0.45"))
 FP16            = os.getenv("FP16", "False").lower() == "true"
 DISPLAY_OUTPUT  = os.getenv("DISPLAY_OUTPUT", "False").lower() == "true"
 
@@ -78,6 +79,7 @@ def load_model():
     exp = get_exp(None, MODEL_NAME)
     exp.test_conf = CONF_THRESHOLD
     exp.nmsthre = NMS_THRESHOLD
+    exp.test_size = (TEST_SIZE, TEST_SIZE)
 
     model = exp.get_model()
     logger.info("Model: {} | {}".format(MODEL_NAME, get_model_info(model, exp.test_size)))
