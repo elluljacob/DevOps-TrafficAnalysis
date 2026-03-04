@@ -1,103 +1,76 @@
-// lib/dynamo.ts
+// lib/database.ts
 
-import {
-  DynamoDBClient,
-  DynamoDBClientConfig,
-  ListTablesCommand,
-} from "@aws-sdk/client-dynamodb";
-
-import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { Pool } from "pg";
 import { log, LogLevel } from "./logger";
 
-const MAX_RETRIES = parseInt(process.env.DYNAMO_RETRY_MAX ?? "50", 10);
-const RETRY_INTERVAL = parseInt(
-  process.env.DYNAMO_RETRY_INTERVAL_MS ?? "5000",
-  10
-);
-const RETRY_ENABLED = process.env.DYNAMO_RETRY_ENABLED !== "false";
+const MAX_RETRIES = parseInt(process.env.DB_RETRY_MAX ?? "50", 10);
+const RETRY_INTERVAL = parseInt(process.env.DB_RETRY_INTERVAL_MS ?? "5000", 10);
 
 function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * We store the client and init promise on globalThis
- * so that Next.js hot reload does not recreate them.
+ * Store pool + init promise on globalThis
+ * to survive Next.js hot reload
  */
 declare global {
-  // eslint-disable-next-line no-var
-  var __dynamoClient: DynamoDBDocumentClient | undefined;
-  // eslint-disable-next-line no-var
-  var __dynamoInitPromise: Promise<DynamoDBDocumentClient> | undefined;
+    // eslint-disable-next-line no-var
+    var __pgPool: Pool | undefined;
+    // eslint-disable-next-line no-var
+    var __pgInitPromise: Promise<Pool> | undefined;
 }
 
-async function createDynamoClient(): Promise<DynamoDBDocumentClient> {
-  if (!RETRY_ENABLED) {
-    throw new Error("DynamoDB retry disabled via env");
-  }
+async function createPostgresPool(): Promise<Pool> {
+    let lastError: unknown;
 
-  const config: DynamoDBClientConfig = {
-    region: process.env.AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-    },
-  };
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            log(`[Postgres] Init attempt ${attempt}/${MAX_RETRIES}`, LogLevel.INFO);
 
-  let lastError: unknown;
+            const pool = new Pool({
+                host        : process.env.DB_HOST,
+                port        : Number(process.env.DB_PORT ?? 5432),
+                user        : process.env.DB_USER,
+                password    : process.env.DB_PASSWORD,
+                database    : process.env.DB_NAME,
+                max         : 10, // max connections
+            });
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      log(
-        `[DynamoDB] Init attempt ${attempt}/${MAX_RETRIES}`,
-        LogLevel.INFO
-      );
+            // Test connection
+            await pool.query("SELECT 1");
 
-      const client = new DynamoDBClient(config);
+            log("[Postgres] Connected and ping successful", LogLevel.INFO);
 
-      // Ping DynamoDB
-      await client.send(new ListTablesCommand({ Limit: 1 }));
+            return pool;
+        } catch (err) {
+            lastError = err;
 
-      const docClient = DynamoDBDocumentClient.from(client);
+            log(`[Postgres] Connection failed (attempt ${attempt}): ${err}`, LogLevel.ERROR);
 
-      log("[DynamoDB] Connected and ping successful", LogLevel.INFO);
-
-      return docClient;
-    } catch (err) {
-      lastError = err;
-
-      log(
-        `[DynamoDB] Connect/ping failed (attempt ${attempt}): ${err}`,
-        LogLevel.ERROR
-      );
-
-      if (attempt < MAX_RETRIES) {
-        await sleep(RETRY_INTERVAL);
-      }
+            if (attempt < MAX_RETRIES) {
+                await sleep(RETRY_INTERVAL);
+            }
+        }
     }
-  }
 
-  throw new Error(
-    `[DynamoDB] All retry attempts failed — giving up: ${lastError}`
-  );
+    throw new Error(`[Postgres] All retry attempts failed — giving up: ${lastError}`);
 }
 
 /**
- * Public accessor — always await this before using Dynamo.
+ * Public accessor — always await before using
  */
-export async function getDynamoClient(): Promise<DynamoDBDocumentClient> {
-  // If already initialised, return immediately
-  if (global.__dynamoClient) {
-    return global.__dynamoClient;
-  }
+export async function getDb(): Promise<Pool> {
+    if (global.__pgPool) {
+        return global.__pgPool;
+    }
 
-  // If initialisation already in progress, wait for it
-  if (!global.__dynamoInitPromise) {
-    global.__dynamoInitPromise = createDynamoClient().then((client) => {
-      global.__dynamoClient = client;
-      return client;
-    });
-  }
+    if (!global.__pgInitPromise) {
+        global.__pgInitPromise = createPostgresPool().then((pool) => {
+            global.__pgPool = pool;
+            return pool;
+        });
+    }
 
-  return global.__dynamoInitPromise;
+    return global.__pgInitPromise;
 }
