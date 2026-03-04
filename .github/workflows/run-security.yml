@@ -1,0 +1,57 @@
+name: Security Checks
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      runtime:
+        required: true
+        type: string   # 'node' | 'python'
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.service }}
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # gitleaks needs full history
+
+      # ── Secret scan (all runtimes) ────────────────────────────────
+      - name: Secret scan (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Dependency scan: Node ─────────────────────────────────────
+      - name: Dependency scan (npm audit)
+        if: inputs.runtime == 'node'
+        run: npm audit --audit-level=high
+
+      # ── Dependency scan: Python ───────────────────────────────────
+      - name: Set up Python
+        if: inputs.runtime == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Dependency scan (pip-audit)
+        if: inputs.runtime == 'python'
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
+      # ── Filesystem scan (Trivy) ───────────────────────────────────
+      - name: Filesystem scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: ${{ inputs.service }}
+          severity: HIGH,CRITICAL
+          exit-code: 1

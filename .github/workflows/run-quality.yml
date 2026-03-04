@@ -1,4 +1,4 @@
-name: Run Tests
+name: Quality Checks
 
 on:
   workflow_call:
@@ -11,7 +11,7 @@ on:
         type: string   # 'node' | 'python'
 
 jobs:
-  test:
+  quality:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
-      # --- Node ---
+      # ── Node ──────────────────────────────────────────────────────
       - name: Set up Node.js
         if: inputs.runtime == 'node'
         uses: actions/setup-node@v4
@@ -34,11 +34,19 @@ jobs:
         if: inputs.runtime == 'node'
         run: npm ci
 
-      - name: Run Node tests
+      - name: Lint (ESLint)
+        if: inputs.runtime == 'node'
+        run: npx eslint . --max-warnings=10
+
+      - name: Static analysis (tsc)
+        if: inputs.runtime == 'node'
+        run: npx tsc --noEmit
+
+      - name: Unit tests
         if: inputs.runtime == 'node'
         run: npm run test:ci
 
-      # --- Python ---
+      # ── Python ────────────────────────────────────────────────────
       - name: Set up Python
         if: inputs.runtime == 'python'
         uses: actions/setup-python@v5
@@ -50,6 +58,18 @@ jobs:
         if: inputs.runtime == 'python'
         run: pip install -r requirements.txt
 
-      - name: Run Python tests
+      - name: Lint (flake8)
+        if: inputs.runtime == 'python'
+        run: |
+          pip install flake8
+          flake8 . --max-line-length=120 --exclude=__pycache__,.venv
+
+      - name: Static analysis (mypy)
+        if: inputs.runtime == 'python'
+        run: |
+          pip install mypy
+          mypy . --ignore-missing-imports
+
+      - name: Unit tests
         if: inputs.runtime == 'python'
         run: pytest --tb=short

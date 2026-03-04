@@ -5,7 +5,6 @@ import LineChart    from '@/components/chart_generators/generate_linechart'
 import st_styles    from '@/styles/statistics.module.css'
 import cd_styles    from '@/styles/common_dashboard.module.css'
 import { PieChartStat, HistoryDataPoint, TimeRange } from '@/types/stats'
-import { log, LogLevel } from '@/lib/logger'
 
 /* ============================================================================
  * TrafficChartTimeline Component
@@ -135,7 +134,9 @@ function useTrafficData(range: TimeRange) {
     });
 
     const rangeRef = useRef(range);
-    rangeRef.current = range;
+    useEffect(() => {
+        rangeRef.current = range;
+    }, [range])
 
     const fetchData = async () => {
         try {

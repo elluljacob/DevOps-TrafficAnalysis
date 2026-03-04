@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { generateMockHistory, getStats } from '@/app/api/stats/data_fetch_requests'
-import { DashboardResponse, PieChartStat, TimeRange, TrafficEntry } from '@/types/stats'
+import { generateMockHistory } from '@/app/api/stats/data_fetch_requests'
+import { DashboardResponse, TimeRange, TrafficEntry } from '@/types/stats'
 import { aggregateCameraData } from '@/app/api/stats/testing_db'
 import { log, LogLevel } from '@/lib/logger'
 

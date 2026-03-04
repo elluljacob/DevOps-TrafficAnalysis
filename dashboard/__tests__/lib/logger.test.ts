@@ -4,7 +4,6 @@ import { log, LogLevel, toggleConsoleLogging } from '../../src/lib/logger'
 jest.mock('fs')
 
 const mockAppendFile = jest.mocked(fs.appendFile)
-const mockWriteFileSync = jest.mocked(fs.writeFileSync)
 
 beforeEach(() => jest.clearAllMocks())
 

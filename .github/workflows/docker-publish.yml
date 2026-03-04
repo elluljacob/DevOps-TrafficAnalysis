@@ -13,7 +13,7 @@ on:
 permissions:
   contents: read
   packages: write
-  
+
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
@@ -33,29 +33,67 @@ jobs:
             stream_processor: 'stream-processor/**'
             yolox_service: 'yolox-service/**'
 
-  test-dashboard:
+  # ── Stage 1: Quality ────────────────────────────────────────────
+
+  quality-dashboard:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.dashboard == 'true' || github.event_name == 'workflow_dispatch' }}
-    uses: ./.github/workflows/run-tests.yml
+    uses: ./.github/workflows/run-quality.yml
     with:
       service: dashboard
       runtime: node
 
+  # quality-stream-processor:
+  #   needs: detect-changes
+  #   if: ${{ needs.detect-changes.outputs.stream_processor == 'true' || github.event_name == 'workflow_dispatch' }}
+  #   uses: ./.github/workflows/run-quality.yml
+  #   with:
+  #     service: stream-processor
+  #     runtime: python
+
+  # quality-yolox-service:
+  #   needs: detect-changes
+  #   if: ${{ needs.detect-changes.outputs.yolox_service == 'true' || github.event_name == 'workflow_dispatch' }}
+  #   uses: ./.github/workflows/run-quality.yml
+  #   with:
+  #     service: yolox-service
+  #     runtime: python
+
+  # ── Stage 2: Security ───────────────────────────────────────────
+
+  security-dashboard:
+    needs: [detect-changes, quality-dashboard]
+    if: ${{ needs.detect-changes.outputs.dashboard == 'true' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/run-security.yml
+    with:
+      service: dashboard
+      runtime: node
+
+  # security-stream-processor:
+  #   needs: [detect-changes, quality-stream-processor]
+  #   if: ${{ needs.detect-changes.outputs.stream_processor == 'true' || github.event_name == 'workflow_dispatch' }}
+  #   uses: ./.github/workflows/run-security.yml
+  #   with:
+  #     service: stream-processor
+  #     runtime: python
+
+  # security-yolox-service:
+  #   needs: [detect-changes, quality-yolox-service]
+  #   if: ${{ needs.detect-changes.outputs.yolox_service == 'true' || github.event_name == 'workflow_dispatch' }}
+  #   uses: ./.github/workflows/run-security.yml
+  #   with:
+  #     service: yolox-service
+  #     runtime: python
+
+  # ── Stage 3: Build & Push (includes container scan) ─────────────
+
   build-dashboard:
-    needs: detect-changes
+    needs: [detect-changes, security-dashboard]
     if: ${{ needs.detect-changes.outputs.dashboard == 'true' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       image_name: dashboard
       build_context: ./dashboard
-
-  # test-stream-processor:
-  #   needs: detect-changes
-  #   if: ${{ needs.detect-changes.outputs.stream_processor == 'true' || github.event_name == 'workflow_dispatch' }}
-  #   uses: ./.github/workflows/run-tests.yml
-  #   with:
-  #     service: stream-processor
-  #     runtime: python
 
   build-stream-processor:
     needs: detect-changes
@@ -65,14 +103,6 @@ jobs:
       image_name: stream-processor
       build_context: ./stream-processor
 
-  # test-yolox-service:
-  #   needs: detect-changes
-  #   if: ${{ needs.detect-changes.outputs.yolox_service == 'true' || github.event_name == 'workflow_dispatch' }}
-  #   uses: ./.github/workflows/run-tests.yml
-  #   with:
-  #     service: yolox-service
-  #     runtime: python
-  
   build-yolox-service:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.yolox_service == 'true' || github.event_name == 'workflow_dispatch' }}

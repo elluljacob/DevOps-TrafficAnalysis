@@ -10,7 +10,7 @@ export type PieChartStat = {
   value: number
 }
 export type TrafficEntry = {
-  camera: String
+  camera: string
   data : PieChartStat[]
 }
 

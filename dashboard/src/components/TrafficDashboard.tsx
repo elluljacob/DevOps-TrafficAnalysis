@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useState } from 'react'
 import TrafficControls  from '@/components/traffic_controller'
 import styles           from '@/styles/common_dashboard.module.css'
 import StatisticsPage   from '@/components/statistics_page'

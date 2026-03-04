@@ -42,3 +42,10 @@ jobs:
           tags: |
             ghcr.io/${{ env.REPO_LOWERCASE }}/${{ inputs.image_name }}:latest
             ghcr.io/${{ env.REPO_LOWERCASE }}/${{ inputs.image_name }}:${{ github.sha }}
+      
+      - name: Container scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LOWERCASE }}/${{ inputs.image_name }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: 1
