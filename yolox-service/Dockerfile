@@ -5,10 +5,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY yolox/ ./yolox/
-COPY exps/ ./exps/
-COPY database.py .
-COPY consumer.py .
+COPY yolox-consumer/yolox/ ./yolox/
+COPY yolox-consumer/exps/ ./exps/
+COPY yolox-consumer/database.py .
+COPY yolox-consumer/consumer.py .
 
 # Downloads the weights for yolo-s model from official YOLOX GitHub
 RUN apt-get update && apt-get install -y --no-install-recommends curl && \

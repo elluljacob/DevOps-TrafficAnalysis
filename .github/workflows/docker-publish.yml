@@ -109,4 +109,4 @@ jobs:
     uses: ./.github/workflows/docker-build.yml
     with:
       image_name: yolox-service
-      build_context: ./yolox-service/yolox-consumer
+      build_context: ./yolox-service

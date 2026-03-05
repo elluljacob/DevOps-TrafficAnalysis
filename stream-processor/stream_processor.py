@@ -61,7 +61,7 @@ def encode_frame_jpeg_base64(frame, jpeg_quality: int) -> str:
         raise RuntimeError("Failed to encode frame as JPEG") from e
     if not ok:
         raise RuntimeError("Failed to encode frame as JPEG")
-    return base64.b64encode(buf).decode("utf-8")
+    return base64.b64encode(buf).decode("utf-8")  # type: ignore[arg-type]
 
 
 def stream_capture_loop(
