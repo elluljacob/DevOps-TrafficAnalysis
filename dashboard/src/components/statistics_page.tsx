@@ -135,7 +135,6 @@ function SimplePieCharts({
         </div>
     )
 }
-
 /* ============================================================================
  * usePieData Hook
  * ============================================================================
@@ -143,23 +142,21 @@ function SimplePieCharts({
 function usePieData(range: TimeRange) {
     const [pieData, setPieData] = useState<PieChartResult[]>([])
 
-    // Removed rangeRef.current = range from here
-
-    const fetchPieData = async () => {
-        try {
-            const res = await fetch('/api/stats')
-            const result: PieChartResult[] = await res.json()
-            setPieData(result ?? [])
-        } catch (err) {
-            console.error('Fetch error:', err)
-        }
-    }
-
     useEffect(() => {
-        fetchPieData()
-        const interval = setInterval(fetchPieData, 5000)
+        // Move function inside to keep dependencies clean
+        const fetchData = async () => {
+            try {
+                const res = await fetch('/api/stats')
+                const result: PieChartResult[] = await res.json()
+                setPieData(result ?? [])
+            } catch (err) {
+                console.error('Fetch error:', err)
+            }
+        }
+
+        fetchData() // Initial call
+        const interval = setInterval(fetchData, 5000)
         return () => clearInterval(interval)
-        // range is a dependency; if it changes, we restart the interval
     }, [range]) 
 
     return pieData
@@ -172,31 +169,27 @@ function usePieData(range: TimeRange) {
 function useCameraHistory(range: TimeRange, camera: CameraObject) {
     const [history, setHistory] = useState<HistoryDataPoint[]>([])
 
-    // Removed ref assignments from the render path
-
-    const fetchHistory = async () => {
-        try {
-            // Use range and camera directly from arguments instead of refs
-            const res = await fetch(`/api/camera_history?range=${range}&camera=${camera}`)
-            const result = await res.json()
-            
-            if (result && Array.isArray(result.history)) {
-                setHistory(result.history)
-            } else {
-                console.warn('API returned no history:', result.error || 'Unknown error')
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await fetch(`/api/camera_history?range=${range}&camera=${camera}`)
+                const result = await res.json()
+                
+                if (result && Array.isArray(result.history)) {
+                    setHistory(result.history)
+                } else {
+                    setHistory([]) 
+                }
+            } catch (err) {
+                console.error('History fetch error:', err)
                 setHistory([]) 
             }
-        } catch (err) {
-            console.error('History fetch error:', err)
-            setHistory([]) 
         }
-    }
 
-    useEffect(() => {
-        fetchHistory()
-        const interval = setInterval(fetchHistory, 30000)
+        fetchData() // Initial call
+        const interval = setInterval(fetchData, 30000)
         return () => clearInterval(interval)
-    }, [range, camera]) // Effect triggers whenever these change
+    }, [range, camera])
 
     return history
 }
