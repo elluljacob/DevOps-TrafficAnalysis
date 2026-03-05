@@ -7,7 +7,7 @@
  */
 
 export type PieChartResult = {
-    camera: String
+    camera: string
     data : {
         label: string
         value: number

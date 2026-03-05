@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import PieChart  from '@/components/chart_generators/generate_piechart'
 import LineChart from '@/components/chart_generators/generate_linechart'
 import st_styles from '@/styles/statistics.module.css'
@@ -142,8 +142,8 @@ function SimplePieCharts({
  */
 function usePieData(range: TimeRange) {
     const [pieData, setPieData] = useState<PieChartResult[]>([])
-    const rangeRef = useRef(range)
-    rangeRef.current = range
+
+    // Removed rangeRef.current = range from here
 
     const fetchPieData = async () => {
         try {
@@ -159,7 +159,8 @@ function usePieData(range: TimeRange) {
         fetchPieData()
         const interval = setInterval(fetchPieData, 5000)
         return () => clearInterval(interval)
-    }, [range])
+        // range is a dependency; if it changes, we restart the interval
+    }, [range]) 
 
     return pieData
 }
@@ -170,22 +171,20 @@ function usePieData(range: TimeRange) {
  */
 function useCameraHistory(range: TimeRange, camera: CameraObject) {
     const [history, setHistory] = useState<HistoryDataPoint[]>([])
-    const rangeRef = useRef(range)
-    const cameraRef = useRef(camera)
-    rangeRef.current = range
-    cameraRef.current = camera
+
+    // Removed ref assignments from the render path
 
     const fetchHistory = async () => {
         try {
-            const res = await fetch(`/api/camera_history?range=${rangeRef.current}&camera=${cameraRef.current}`)
+            // Use range and camera directly from arguments instead of refs
+            const res = await fetch(`/api/camera_history?range=${range}&camera=${camera}`)
             const result = await res.json()
             
-            // FIX: Only set history if it actually exists in the response
             if (result && Array.isArray(result.history)) {
                 setHistory(result.history)
             } else {
                 console.warn('API returned no history:', result.error || 'Unknown error')
-                setHistory([]) // Clear or keep old data? Usually clear to show "No Data"
+                setHistory([]) 
             }
         } catch (err) {
             console.error('History fetch error:', err)
@@ -197,11 +196,10 @@ function useCameraHistory(range: TimeRange, camera: CameraObject) {
         fetchHistory()
         const interval = setInterval(fetchHistory, 30000)
         return () => clearInterval(interval)
-    }, [range, camera])
+    }, [range, camera]) // Effect triggers whenever these change
 
     return history
 }
-
 /* ============================================================================
  * StatisticsPage Component
  * ============================================================================
