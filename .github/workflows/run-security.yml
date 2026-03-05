@@ -23,22 +23,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ── Filesystem scan (Trivy) — runs first, no setup needed ─────
+      # Filesystem scan (Trivy)
       - name: Filesystem scan (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
           scan-ref: ${{ inputs.service }}
           severity: HIGH,CRITICAL
-          exit-code: 0   # warn only — don't block on OS-level vulns
+          exit-code: 0 
 
-      # ── Secret scan ───────────────────────────────────────────────
+      # Secret scan
       - name: Secret scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── Dependency scan: Node ─────────────────────────────────────
+      # Dependency scan: Node
       - name: Set up Node.js
         if: inputs.runtime == 'node'
         uses: actions/setup-node@v4
@@ -53,9 +53,9 @@ jobs:
 
       - name: Dependency scan (npm audit)
         if: inputs.runtime == 'node'
-        run: npm audit --audit-level=critical   # high is too noisy, critical only
+        run: npm audit --audit-level=critical
 
-      # ── Dependency scan: Python ───────────────────────────────────
+      # Dependency scan: Python 
       - name: Set up Python
         if: inputs.runtime == 'python'
         uses: actions/setup-python@v5

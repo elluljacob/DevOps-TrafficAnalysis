@@ -4,13 +4,14 @@ import time
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pytest
 
 from stream_processor import StreamConfig, stream_capture_loop
 
 
 def make_cfg(stream_id="cam1"):
-    return StreamConfig(stream_id=stream_id, location="test-loc", url="rtsp://fake/stream")
+    return StreamConfig(
+        stream_id=stream_id, location="test-loc", url="rtsp://fake/stream"
+    )
 
 
 def make_frame():
@@ -58,6 +59,7 @@ def run_capture_loop(mock_cap, interval_s=1.0, duration=3.0, queue_size=100):
         payloads.append(out_q.get_nowait())
     return payloads
 
+
 class TestStreamCaptureLoop:
 
     def test_emits_one_payload_per_second(self):
@@ -84,7 +86,10 @@ class TestStreamCaptureLoop:
 
     def test_image_data_is_non_empty_string(self):
         payloads = run_capture_loop(make_mock_cap(), interval_s=1.0, duration=1.5)
-        assert all(isinstance(p["image_data"], str) and len(p["image_data"]) > 0 for p in payloads)
+        assert all(
+            isinstance(p["image_data"], str) and len(p["image_data"]) > 0
+            for p in payloads
+        )
 
     def test_stops_cleanly_on_stop_event(self):
         """Thread should join within timeout after stop is set."""
@@ -134,17 +139,20 @@ class TestStreamCaptureLoop:
     def test_does_not_emit_faster_than_interval(self):
         """Timestamps between payloads should be >= interval_s."""
         import datetime
+
         payloads = run_capture_loop(make_mock_cap(), interval_s=1.0, duration=4.0)
         assert len(payloads) >= 2
         times = [
             datetime.datetime.fromisoformat(p["timestamp"].replace("Z", "+00:00"))
             for p in payloads
         ]
-        gaps = [(times[i+1] - times[i]).total_seconds() for i in range(len(times)-1)]
+        gaps = [
+            (times[i + 1] - times[i]).total_seconds() for i in range(len(times) - 1)
+        ]
         assert all(g >= 0.9 for g in gaps), f"Emitted too fast, gaps: {gaps}"
 
     def test_queue_full_does_not_crash(self):
         """If the queue is full, the loop should log a warning and continue, not crash."""
-        payloads = run_capture_loop(make_mock_cap(), interval_s=0.1, duration=2.0, queue_size=2)
+        run_capture_loop(make_mock_cap(), interval_s=0.1, duration=2.0, queue_size=2)
         # Just assert the thread completed without exception — queue overflow should be handled
         assert True

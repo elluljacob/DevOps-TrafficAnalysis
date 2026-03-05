@@ -1,6 +1,5 @@
 import base64
 import json
-import tempfile
 from pathlib import Path
 
 import cv2
@@ -8,6 +7,7 @@ import numpy as np
 import pytest
 
 from stream_processor import StreamConfig, encode_frame_jpeg_base64, load_streams
+
 
 # helpers
 def write_json(tmp_path: Path, data) -> str:
@@ -23,19 +23,24 @@ def make_frame(h=480, w=640) -> np.ndarray:
 
 # load stream test
 
+
 class TestLoadStreams:
 
     def test_valid_config_returns_stream_configs(self, tmp_path):
-        data = [{"stream_id": "cam1", "location": "L42", "url": "rtsp://localhost/cam1"}]
+        data = [
+            {"stream_id": "cam1", "location": "L42", "url": "rtsp://localhost/cam1"}
+        ]
         result = load_streams(write_json(tmp_path, data))
         assert len(result) == 1
-        assert result[0] == StreamConfig(stream_id="cam1", location="L42", url="rtsp://localhost/cam1")
+        assert result[0] == StreamConfig(
+            stream_id="cam1", location="L42", url="rtsp://localhost/cam1"
+        )
 
     def test_multiple_streams(self, tmp_path):
         data = [
-            {"stream_id": "cam1", "location": "L42",  "url": "rtsp://localhost/cam1"},
-            {"stream_id": "cam2", "location": "SP",   "url": "rtsp://localhost/cam2"},
-            {"stream_id": "cam3", "location": "BM",   "url": "rtsp://localhost/cam3"},
+            {"stream_id": "cam1", "location": "L42", "url": "rtsp://localhost/cam1"},
+            {"stream_id": "cam2", "location": "SP", "url": "rtsp://localhost/cam2"},
+            {"stream_id": "cam3", "location": "BM", "url": "rtsp://localhost/cam3"},
         ]
         result = load_streams(write_json(tmp_path, data))
         assert len(result) == 3
@@ -77,6 +82,7 @@ class TestLoadStreams:
 
 # encoding tests
 
+
 class TestEncodeFrameJpegBase64:
 
     def test_returns_valid_base64_string(self):
@@ -107,7 +113,7 @@ class TestEncodeFrameJpegBase64:
 
     def test_higher_quality_produces_larger_output(self):
         frame = make_frame()
-        low  = encode_frame_jpeg_base64(frame, jpeg_quality=1)
+        low = encode_frame_jpeg_base64(frame, jpeg_quality=1)
         high = encode_frame_jpeg_base64(frame, jpeg_quality=95)
         assert len(high) > len(low)
 

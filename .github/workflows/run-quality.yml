@@ -21,7 +21,6 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
-      # ── Node ──────────────────────────────────────────────────────
       - name: Set up Node.js
         if: inputs.runtime == 'node'
         uses: actions/setup-node@v4
@@ -46,7 +45,6 @@ jobs:
         if: inputs.runtime == 'node'
         run: npm run test:ci
 
-      # ── Python ────────────────────────────────────────────────────
       - name: Set up Python
         if: inputs.runtime == 'python'
         uses: actions/setup-python@v5
@@ -72,4 +70,4 @@ jobs:
 
       - name: Unit tests
         if: inputs.runtime == 'python'
-        run: pytest --tb=short
+        run: pytest --tb=short -m "not integration"
