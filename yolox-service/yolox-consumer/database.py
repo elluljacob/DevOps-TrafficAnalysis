@@ -3,6 +3,7 @@ import psycopg2
 from datetime import datetime, timezone
 from loguru import logger
 
+
 class PostgresWriter:
     def __init__(self):
         self.host = os.getenv("DB_HOST")
@@ -17,7 +18,7 @@ class PostgresWriter:
                 database=self.database,
                 user=self.user,
                 password=self.password,
-                port=self.port
+                port=self.port,
             )
             self.conn.autocommit = True
             self.cur = self.conn.cursor()
@@ -47,7 +48,7 @@ class PostgresWriter:
             ts = datetime.now(timezone.utc)
         else:
             ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-    
+
         params = (
             stream_id,
             ts,
@@ -57,7 +58,7 @@ class PostgresWriter:
             counts.get("car", 0),
             counts.get("truck", 0),
             list(counts.keys()),
-            "active_inference"
+            "active_inference",
         )
 
         try:
