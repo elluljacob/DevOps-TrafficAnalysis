@@ -42,9 +42,11 @@ describe('log()', () => {
   it('handles fs.appendFile errors gracefully', () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
     
-    // Trigger the error callback by manually calling the 3rd argument (cb)
-    mockAppendFile.mockImplementationOnce((_path, _data, cb: any) => {
-        cb(new Error('disk full'))
+    // Use Parameters to extract the correct type for the callback
+    mockAppendFile.mockImplementationOnce((_path, _data, cb) => {
+      if (typeof cb === 'function') {
+        (cb as (err: Error | null) => void)(new Error('disk full'))
+      }
     })
 
     log('trigger error', LogLevel.INFO)
