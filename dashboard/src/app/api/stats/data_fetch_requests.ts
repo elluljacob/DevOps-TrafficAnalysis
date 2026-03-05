@@ -1,5 +1,4 @@
 import { PieChartStat, HistoryDataPoint, TimeRange, DashboardResponse, TrafficEntry } from "@/types/stats";
-import { log, LogLevel } from "@/lib/logger"; 
 
 /* ============================================================================
  * Traffic Categories

@@ -1,0 +1,73 @@
+name: Quality Checks
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      runtime:
+        required: true
+        type: string   # 'node' | 'python'
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.service }}
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        if: inputs.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ${{ inputs.service }}/package-lock.json
+
+      - name: Install Node dependencies
+        if: inputs.runtime == 'node'
+        run: npm ci
+
+      - name: Lint (ESLint)
+        if: inputs.runtime == 'node'
+        run: npx eslint . --max-warnings=10
+
+      - name: Static analysis (tsc)
+        if: inputs.runtime == 'node'
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        if: inputs.runtime == 'node'
+        run: npm run test:ci
+
+      - name: Set up Python
+        if: inputs.runtime == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        if: inputs.runtime == 'python'
+        run: pip install -r requirements.txt
+
+      - name: Lint (flake8)
+        if: inputs.runtime == 'python'
+        run: |
+          pip install flake8
+          flake8 . --max-line-length=120 --exclude=__pycache__,.venv
+
+      - name: Static analysis (mypy)
+        if: inputs.runtime == 'python'
+        run: |
+          pip install mypy
+          mypy . 
+
+      - name: Unit tests
+        if: inputs.runtime == 'python'
+        run: pytest --tb=short -m "not integration"

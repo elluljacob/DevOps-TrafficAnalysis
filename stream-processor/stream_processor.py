@@ -14,14 +14,21 @@ import cv2
 
 from rabbit_publisher import RabbitPublisher
 
+
 @dataclasses.dataclass(frozen=True)
 class StreamConfig:
     stream_id: str
     location: str
     url: str
 
+
 def utc_iso_now() -> str:
-    return dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return (
+        dt.datetime.now(dt.timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
+
 
 def load_streams(path: str) -> List[StreamConfig]:
     with open(path, "r", encoding="utf-8") as f:
@@ -35,14 +42,27 @@ def load_streams(path: str) -> List[StreamConfig]:
         for key in ("stream_id", "location", "url"):
             if key not in item or not item[key]:
                 raise ValueError(f"Stream entry #{i} missing '{key}'")
-        streams.append(StreamConfig(stream_id=str(item["stream_id"]), location=str(item["location"]), url=str(item["url"])))
+        streams.append(
+            StreamConfig(
+                stream_id=str(item["stream_id"]),
+                location=str(item["location"]),
+                url=str(item["url"]),
+            )
+        )
     return streams
 
+
 def encode_frame_jpeg_base64(frame, jpeg_quality: int) -> str:
-    ok, buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), int(jpeg_quality)])
+    try:
+        ok, buf = cv2.imencode(
+            ".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), int(jpeg_quality)]
+        )
+    except cv2.error as e:
+        raise RuntimeError("Failed to encode frame as JPEG") from e
     if not ok:
         raise RuntimeError("Failed to encode frame as JPEG")
-    return base64.b64encode(buf).decode("utf-8")
+    return base64.b64encode(buf).decode("utf-8")  # type: ignore[arg-type]
+
 
 def stream_capture_loop(
     cfg: StreamConfig,
@@ -111,9 +131,10 @@ def stream_capture_loop(
                 log.warning("Publisher queue full; dropping frame")
 
             next_emit = time.monotonic() + interval_s
-        except Exception as e:
+        except Exception:
             try:
-                if cap is not None: cap.release()
+                if cap is not None:
+                    cap.release()
             except Exception:
                 pass
             cap = None
@@ -121,10 +142,12 @@ def stream_capture_loop(
             reconnect_sleep = min(max_reconnect_sleep_s, reconnect_sleep * 1.5)
 
     try:
-        if cap is not None: cap.release()
+        if cap is not None:
+            cap.release()
     except Exception:
         pass
     log.info("Stopped")
+
 
 def publisher_loop(
     publisher: RabbitPublisher,
@@ -160,24 +183,43 @@ def publisher_loop(
     except Exception:
         pass
 
+
 def make_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Stream processor")
     p.add_argument("--streams", default=os.environ.get("STREAMS_FILE", "streams.json"))
-    p.add_argument("--interval", type=float, default=float(os.environ.get("FRAME_INTERVAL_S", "1")))
-    p.add_argument("--jpeg-quality", type=int, default=int(os.environ.get("JPEG_QUALITY", "80")))
+    p.add_argument(
+        "--interval", type=float, default=float(os.environ.get("FRAME_INTERVAL_S", "1"))
+    )
+    p.add_argument(
+        "--jpeg-quality", type=int, default=int(os.environ.get("JPEG_QUALITY", "80"))
+    )
     p.add_argument("--queue-name", default=os.environ.get("QUEUE_NAME", "edge_frames"))
-    p.add_argument("--rabbitmq-host", default=os.environ.get("RABBITMQ_HOST", "localhost"))
-    p.add_argument("--rabbitmq-port", type=int, default=int(os.environ.get("RABBITMQ_PORT", "5672")))
-    p.add_argument("--rabbitmq-username", default=os.environ.get("RABBITMQ_USERNAME", "guest"))
-    p.add_argument("--rabbitmq-password", default=os.environ.get("RABBITMQ_PASSWORD", "guest"))
+    p.add_argument(
+        "--rabbitmq-host", default=os.environ.get("RABBITMQ_HOST", "localhost")
+    )
+    p.add_argument(
+        "--rabbitmq-port",
+        type=int,
+        default=int(os.environ.get("RABBITMQ_PORT", "5672")),
+    )
+    p.add_argument(
+        "--rabbitmq-username", default=os.environ.get("RABBITMQ_USERNAME", "guest")
+    )
+    p.add_argument(
+        "--rabbitmq-password", default=os.environ.get("RABBITMQ_PASSWORD", "guest")
+    )
     p.add_argument("--aws-mq-uri", default=os.environ.get("AWS_MQ_URI", ""))
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--log-level", default=os.environ.get("LOG_LEVEL", "INFO"))
     return p
 
+
 def main() -> int:
     args = make_parser().parse_args()
-    logging.basicConfig(level=getattr(logging, str(args.log_level).upper(), logging.INFO), format="%(asctime)s %(levelname)s %(name)s - %(message)s")
+    logging.basicConfig(
+        level=getattr(logging, str(args.log_level).upper(), logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+    )
 
     streams = load_streams(args.streams)
     stop_event = threading.Event()
@@ -190,15 +232,25 @@ def main() -> int:
         username=args.rabbitmq_username,
         password=args.rabbitmq_password,
         queue_name=args.queue_name,
-        aws_mq_uri=args.aws_mq_uri, # Pass the AWS info
+        aws_mq_uri=args.aws_mq_uri,  # Pass the AWS info
     )
 
-    pub_thread = threading.Thread(target=publisher_loop, name="publisher", daemon=True, args=(publisher, out_q, stop_event, bool(args.dry_run)))
+    pub_thread = threading.Thread(
+        target=publisher_loop,
+        name="publisher",
+        daemon=True,
+        args=(publisher, out_q, stop_event, bool(args.dry_run)),
+    )
     pub_thread.start()
 
     cap_threads: List[threading.Thread] = []
     for cfg in streams:
-        t = threading.Thread(target=stream_capture_loop, name=f"capture:{cfg.stream_id}", daemon=True, args=(cfg, float(args.interval), int(args.jpeg_quality), out_q, stop_event))
+        t = threading.Thread(
+            target=stream_capture_loop,
+            name=f"capture:{cfg.stream_id}",
+            daemon=True,
+            args=(cfg, float(args.interval), int(args.jpeg_quality), out_q, stop_event),
+        )
         t.start()
         cap_threads.append(t)
 
@@ -207,9 +259,11 @@ def main() -> int:
             time.sleep(1.0)
     except KeyboardInterrupt:
         stop_event.set()
-        for t in cap_threads: t.join(timeout=2.0)
+        for t in cap_threads:
+            t.join(timeout=2.0)
         pub_thread.join(timeout=2.0)
         return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

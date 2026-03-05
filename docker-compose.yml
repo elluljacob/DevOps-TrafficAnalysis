@@ -27,7 +27,7 @@ services:
       - RABBITMQ_PASSWORD=guest
       - QUEUE_NAME=edge_frames
       - FRAME_INTERVAL_S=1.0
-      - JPEG_QUALITY=80
+      - JPEG_QUALITY=95
       - LOG_LEVEL=INFO
       - STREAMS_FILE=/app/streams.json
       - AWS_MQ_URI=amqp://${AWS_MQ_USERNAME}:${AWS_MQ_PASSWORD}@16.171.53.75:5672

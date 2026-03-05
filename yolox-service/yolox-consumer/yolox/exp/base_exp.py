@@ -11,7 +11,6 @@ import torch
 from torch.nn import Module
 
 
-
 class BaseExp(metaclass=ABCMeta):
     """Basic class for any experiment."""
 
@@ -41,9 +40,7 @@ class BaseExp(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_lr_scheduler(
-        self, lr: float, iters_per_epoch: int, **kwargs
-    ):
+    def get_lr_scheduler(self, lr: float, iters_per_epoch: int, **kwargs):
         pass
 
     @abstractmethod
@@ -64,7 +61,9 @@ class BaseExp(metaclass=ABCMeta):
         return tabulate(exp_table, headers=table_header, tablefmt="fancy_grid")
 
     def merge(self, cfg_list):
-        assert len(cfg_list) % 2 == 0, f"length must be even, check value here: {cfg_list}"
+        assert (
+            len(cfg_list) % 2 == 0
+        ), f"length must be even, check value here: {cfg_list}"
         for k, v in zip(cfg_list[0::2], cfg_list[1::2]):
             # only update value with same key
             if hasattr(self, k):

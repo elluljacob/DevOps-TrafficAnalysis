@@ -15,9 +15,9 @@ function sleep(ms: number) {
  * to survive Next.js hot reload
  */
 declare global {
-    // eslint-disable-next-line no-var
+     
     var __pgPool: Pool | undefined;
-    // eslint-disable-next-line no-var
+     
     var __pgInitPromise: Promise<Pool> | undefined;
 }
 

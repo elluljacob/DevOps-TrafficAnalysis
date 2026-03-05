@@ -17,21 +17,22 @@ from yolox.data.datasets import COCO_CLASSES
 from yolox.exp import get_exp
 from yolox.utils import get_model_info, postprocess
 
-
-RABBITMQ_HOST   = os.getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
 RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST", "/")
 RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", "5672"))
 RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
 RABBITMQ_PASS = os.getenv("RABBITMQ_PASSWORD", "guest")
 
-QUEUE_NAME      = os.getenv("QUEUE_NAME", "edge_frames")
-MODEL_NAME      = os.getenv("MODEL_NAME", "yolox-s")
+QUEUE_NAME = os.getenv("QUEUE_NAME", "edge_frames")
+MODEL_NAME = os.getenv("MODEL_NAME", "yolox-s")
 CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "/app/weights/yolox_s.pth")
-DEVICE          = os.getenv("DEVICE", "cpu")
-CONF_THRESHOLD  = float(os.getenv("CONF_THRESHOLD", "0.3"))
-NMS_THRESHOLD   = float(os.getenv("NMS_THRESHOLD", "0.3"))
-FP16            = os.getenv("FP16", "False").lower() == "true"
-DISPLAY_OUTPUT  = os.getenv("DISPLAY_OUTPUT", "False").lower() == "true"
+DEVICE = os.getenv("DEVICE", "cpu")
+TEST_SIZE = int(os.getenv("TEST_SIZE", "1024"))
+CONF_THRESHOLD = float(os.getenv("CONF_THRESHOLD", "0.20"))
+NMS_THRESHOLD = float(os.getenv("NMS_THRESHOLD", "0.45"))
+FP16 = os.getenv("FP16", "False").lower() == "true"
+DISPLAY_OUTPUT = os.getenv("DISPLAY_OUTPUT", "False").lower() == "true"
+
 
 # ported from model/main.py
 class Predictor:
@@ -60,14 +61,17 @@ class Predictor:
         if self.device == "gpu":
             tensor = tensor.cuda()
             if self.fp16:
-                tensor = tensor.half() # to FP16
+                tensor = tensor.half()  # to FP16
 
         with torch.no_grad():
             t0 = time.time()
             outputs = self.model(tensor)
             outputs = postprocess(
-                outputs, self.num_classes, self.confthre,
-                self.nmsthre, class_agnostic=True,
+                outputs,
+                self.num_classes,
+                self.confthre,
+                self.nmsthre,
+                class_agnostic=True,
             )
             logger.debug("Infer time: {:.4f}s".format(time.time() - t0))
 
@@ -78,14 +82,17 @@ def load_model():
     exp = get_exp(None, MODEL_NAME)
     exp.test_conf = CONF_THRESHOLD
     exp.nmsthre = NMS_THRESHOLD
+    exp.test_size = (TEST_SIZE, TEST_SIZE)
 
     model = exp.get_model()
-    logger.info("Model: {} | {}".format(MODEL_NAME, get_model_info(model, exp.test_size)))
+    logger.info(
+        "Model: {} | {}".format(MODEL_NAME, get_model_info(model, exp.test_size))
+    )
 
     if DEVICE == "gpu":
         model.cuda()
         if FP16:
-            model.half() # to FP16
+            model.half()  # to FP16
     model.eval()
 
     logger.info("Loading checkpoint from {}".format(CHECKPOINT_PATH))
@@ -112,8 +119,10 @@ def process_frame(predictor, frame):
         return {"total_count": 0, "per_class": {}}
 
     output = output.cpu()
-    ratio = img_info["ratio"]
-    scores = (output[:, 4] * output[:, 5]).numpy() # can be used later if we want to incorperate confidence scores
+    ratio = img_info["ratio"]  # noqa: F841
+    scores = (  # noqa: F841 - reserved for confidence score support
+        output[:, 4] * output[:, 5]
+    ).numpy()
     class_ids = output[:, 6].int().numpy()
 
     class_names = [predictor.cls_names[int(cid)] for cid in class_ids]
@@ -147,7 +156,6 @@ def make_callback(predictor, db_writer):
                 ch.basic_ack(delivery_tag=method.delivery_tag)
                 return
 
-
             img_bytes = base64.b64decode(image_data_base64)
             nparr = np.frombuffer(img_bytes, np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -160,7 +168,6 @@ def make_callback(predictor, db_writer):
             # Run YOLOX inference
             result = process_frame(predictor, frame)
 
-            
             log_entry = {
                 "timestamp": timestamp,
                 "stream_id": stream_id,
@@ -173,11 +180,20 @@ def make_callback(predictor, db_writer):
             db_writer.write_inference(
                 stream_id=message.get("stream_id"),
                 location=message.get("location"),
-                result=result
+                result=result,
+                timestamp=timestamp,
             )
-            
+
             if DISPLAY_OUTPUT:
-                cv2.putText(frame, f"Total Count: {result['total_count']}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                cv2.putText(
+                    frame,
+                    f"Total Count: {result['total_count']}",
+                    (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (0, 255, 0),
+                    2,
+                )
                 cv2.imshow("YOLOX Inference", frame)
                 cv2.waitKey(1)
 
@@ -200,7 +216,7 @@ def main():
 
     # Setup Credentials
     credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
-    
+
     # AWS/SSL Logic: Use SSL if port is 5671
     ssl_options = None
     if RABBITMQ_PORT == 5671:
@@ -216,7 +232,7 @@ def main():
         virtual_host=RABBITMQ_VHOST,
         credentials=credentials,
         ssl_options=ssl_options,
-        heartbeat=600
+        heartbeat=600,
     )
 
     connection = pika.BlockingConnection(parameters)
@@ -227,16 +243,22 @@ def main():
         channel.queue_declare(queue=QUEUE_NAME, durable=True, passive=True)
         logger.info(f"Connected to existing queue: {QUEUE_NAME}")
     except pika.exceptions.ChannelClosedByBroker:
-        logger.error(f"Queue {QUEUE_NAME} does not exist! Please create it via the MQ console or a producer.")
-        raise 
+        logger.error(
+            f"Queue {QUEUE_NAME} does not exist! Please create it via the MQ console or a producer."
+        )
+        raise
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
         raise
     # ------------------------------------
 
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue=QUEUE_NAME, on_message_callback=make_callback(predictor, db_writer), auto_ack=False)
-    
+    channel.basic_consume(
+        queue=QUEUE_NAME,
+        on_message_callback=make_callback(predictor, db_writer),
+        auto_ack=False,
+    )
+
     logger.info("Consumer started — waiting for frames on '{}'".format(QUEUE_NAME))
 
     try:

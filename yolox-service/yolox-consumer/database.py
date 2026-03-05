@@ -3,6 +3,7 @@ import psycopg2
 from datetime import datetime, timezone
 from loguru import logger
 
+
 class PostgresWriter:
     def __init__(self):
         self.host = os.getenv("DB_HOST")
@@ -17,7 +18,7 @@ class PostgresWriter:
                 database=self.database,
                 user=self.user,
                 password=self.password,
-                port=self.port
+                port=self.port,
             )
             self.conn.autocommit = True
             self.cur = self.conn.cursor()
@@ -26,7 +27,7 @@ class PostgresWriter:
             logger.error(f"Failed to connect to Postgres: {e}")
             raise
 
-    def write_inference(self, stream_id, location, result):
+    def write_inference(self, stream_id, location, result, timestamp=None):
         """
         Writes YOLOX inference results to Postgres.
         'result' expects: {'total_count': X, 'per_class': {'class': count}}
@@ -42,16 +43,22 @@ class PostgresWriter:
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
+        if timestamp is None:
+            logger.warning("No frame timestamp provided, falling back to now()")
+            ts = datetime.now(timezone.utc)
+        else:
+            ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+
         params = (
             stream_id,
-            datetime.now(timezone.utc),
+            ts,
             location,
             result.get("total_count", 0),
             counts.get("person", 0),
             counts.get("car", 0),
             counts.get("truck", 0),
             list(counts.keys()),
-            "active_inference"
+            "active_inference",
         )
 
         try:

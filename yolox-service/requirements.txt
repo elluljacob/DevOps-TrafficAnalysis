@@ -7,3 +7,4 @@ loguru
 tabulate
 thop
 psycopg2-binary
+mypy
