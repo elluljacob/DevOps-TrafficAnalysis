@@ -21,7 +21,7 @@ class StreamConfig:
     url: str
 
 def utc_iso_now() -> str:
-    return dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 def load_streams(path: str) -> List[StreamConfig]:
     with open(path, "r", encoding="utf-8") as f:
@@ -39,7 +39,10 @@ def load_streams(path: str) -> List[StreamConfig]:
     return streams
 
 def encode_frame_jpeg_base64(frame, jpeg_quality: int) -> str:
-    ok, buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), int(jpeg_quality)])
+    try:
+        ok, buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), int(jpeg_quality)])
+    except cv2.error as e:
+        raise RuntimeError("Failed to encode frame as JPEG") from e
     if not ok:
         raise RuntimeError("Failed to encode frame as JPEG")
     return base64.b64encode(buf).decode("utf-8")

@@ -175,7 +175,8 @@ def make_callback(predictor, db_writer):
             db_writer.write_inference(
                 stream_id=message.get("stream_id"),
                 location=message.get("location"),
-                result=result
+                result=result,
+                timestamp=timestamp
             )
             
             if DISPLAY_OUTPUT:
