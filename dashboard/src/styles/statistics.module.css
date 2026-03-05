@@ -4,20 +4,33 @@
 /* statistics.module.css */
 
 .pieRow {
-    display               : grid;
-    grid-template-columns  : repeat(auto-fit, minmax(15rem, 1fr));
-    gap                    : 1.25rem; /* 20px ≈ 1.25rem */
-    width                  : 100%;
-    margin-bottom          : 1rem;
+    display                 : grid;
+    grid-template-columns   : repeat(auto-fit, minmax(15rem, 1fr));
+    gap                     : 1.25rem; /* 20px ≈ 1.25rem */
+    width                   : 100%;
+    margin-bottom           : 1rem;
 }
 
 .pieBubble {
-    box-sizing             : border-box;
+    box-sizing              : border-box;
 }
 
 .pieChartWrapper {
     height                 : 22.8rem; /* ~365px */
 }
+
+
+.timeStatusBar{
+    display: flex;
+    flex-direction: row;
+}
+
+
+
+
+
+
+
 
 
 
@@ -51,3 +64,8 @@
 
 .crosshair::before { width: 10px; height: 2px; top: 7px; left: 3px; } /* Horizontal */
 .crosshair::after { width: 2px; height: 10px; top: 3px; left: 7px; }  /* Vertical */
+
+
+
+
+

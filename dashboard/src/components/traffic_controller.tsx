@@ -9,7 +9,7 @@ import { useState } from 'react';
 // Load the map component only on the client side
 const Map = dynamic(() => import("@/components/filtermap"), { 
   ssr: false,
-  loading: () => <div style={{ height: "400px", background: "#eee" }}>Loading Map...</div>
+  loading: () => <div style={{ textAlign:"center", height: "400px", background: "#eeeeee4b" }}>Loading Map...</div>
 });
 
 /* ============================================================================
@@ -52,34 +52,7 @@ function TrafficControlStatus() {
     )
 }
 
-/* ============================================================================
- * TimeRangeDropdown Component
- * ----------------------------------------------------------------------------
- * Renders a distinct dropdown with a custom arrow inside the box.
- * ============================================================================
- */
-function TimeRangeDropdown({ range, setRange }: 
-  { range: TimeRange; setRange: (val: TimeRange) => void }) {
-    return (
-        <div className={tc_styles.selectWrapper}>
-            <select value={range} onChange={(e) => setRange(
-                e.target.value as TimeRange
-            )} className={tc_styles.select}>
-                <option value="live">Live (Last 5m) </option>
-                <option value="1h"  >Last Hour      </option>
-                <option value="24h" >Last 24h       </option>
-                <option value="7d"  >Last 7 Days    </option>
-            </select>
-            <div className={tc_styles.selectArrow}>
-                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" 
-                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" 
-                          strokeWidth={2} d="M19 9l-7 7-7-7"/>
-                </svg>
-            </div>
-        </div>
-    )
-}
+
 
 /* ============================================================================
  * TrafficControls Component
@@ -88,12 +61,8 @@ function TimeRangeDropdown({ range, setRange }:
  * a visual separator between the sections.
  * ============================================================================
  */
-interface Props {
-    range: TimeRange
-    setRange: (val: TimeRange) => void
-}
 
-export default function TrafficControls({ range, setRange }: Props) {
+export default function TrafficControls() {
 
     const [cameras, setCameras] = useState([
         { id: 1, name: "Camera A", lat: 51.505, lng: -0.09, enabled: true },
@@ -117,8 +86,6 @@ export default function TrafficControls({ range, setRange }: Props) {
             <h3 className={cd_styles.thirdHeaderFormat}>
                 Time Range
             </h3>
-            
-            <TimeRangeDropdown range={range} setRange={setRange} />
 
             <div className={tc_styles.sectionSeparator}></div>
 

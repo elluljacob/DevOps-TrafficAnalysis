@@ -5,12 +5,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-
-      - DYNAMODB_ENDPOINT=https://dynamodb.eu-north-1.amazonaws.com
-      - AWS_REGION=eu-north-1
-      - DYNAMO_TABLE_NAME=Traffic-Metrics
-
-      - USE_MOCK_DATA=false # Defaults to true if not set
+      - LOG_TO_FILE=false
+      - USE_MOCK_DATA=false
     volumes:
       - .:/app
       - /app/node_modules
