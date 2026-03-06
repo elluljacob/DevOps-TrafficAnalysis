@@ -31,61 +31,8 @@
     background-color: #333;
     border-radius: 10px;
 }
-/* ============================================================================
- *  Dropdown Wrapper
- * ============================================================================ */
-
-.selectWrapper {
-    position          : relative;
-    width             : 100%;
-}
 
 
-/* ============================================================================
- *  Select Box
- * ============================================================================ */
-
-.select {
-    width             : 100%;
-    padding           : 0.5rem 0.75rem;
-    padding-right     : 2rem;             /* space for arrow */
-    font-size         : 0.875rem;         /* text-sm */
-    font-weight       : 500;              /* font-medium */
-    color             : #e5e7eb;          /* light gray text */
-    background-color  : var(--third-colour);  /* darker panel for dropdown */
-    border            : 1px solid #2c2c2c;
-    border-radius     : 0.5rem;
-    appearance        : none;
-    cursor            : pointer;
-    box-shadow        : 0 1px 2px rgba(0,0,0,0.3);
-    transition        : all 0.2s ease-in-out;
-}
-
-.select:hover {
-    border-color      : #4b4b4b;
-}
-
-.select:focus {
-    border-color      : #666666;
-    box-shadow        : 0 0 0 2px rgba(100,100,100,0.3);
-    outline           : none;
-}
-
-
-/* ============================================================================
- *  Arrow Inside Select
- * ============================================================================ */
-
-.selectArrow {
-    pointer-events    : none;
-    position          : absolute;
-    top               : 50%;
-    right             : 0.75rem;
-    transform         : translateY(-50%);
-    display           : flex;
-    align-items       : center;
-    color             : #c0c0c0;          /* subtle gray arrow */
-}
 
 
 /* ============================================================================
