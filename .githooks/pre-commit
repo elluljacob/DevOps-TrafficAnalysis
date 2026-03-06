@@ -1,0 +1,117 @@
+#!/bin/bash
+# Pre-commit: runs fast linting/formatting checks before every commit
+set -e
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+FAILED=0
+
+echo "Running pre-commit checks..."
+
+echo ""
+echo "stream-processor"
+cd "$REPO_ROOT/stream-processor"
+
+if [ -f "venv/bin/python" ]; then
+    PYTHON="venv/bin/python"
+else
+    PYTHON="python3"
+fi
+
+# Install linting tools if missing
+$PYTHON -m pip install --quiet flake8 black mypy
+
+# Black formatting check (non-destructive)
+echo "  black..."
+if ! $PYTHON -m black --check --quiet .; then
+    echo "black: formatting issues found. Run 'black .' to fix."
+    FAILED=1
+else
+    echo "black"
+fi
+
+# Flake8 lint
+echo "  flake8..."
+if ! $PYTHON -m flake8 . --exclude=venv,__pycache__ --max-line-length=120 --quiet; then
+    echo "flake8: lint errors found."
+    FAILED=1
+else
+    echo "flake8"
+fi
+
+echo "  mypy..."
+if ! $PYTHON -m mypy .; then
+    echo "mypy: type errors found."
+    FAILED=1
+else
+    echo "mypy"
+fi
+
+echo ""
+echo "yolox-service"
+cd "$REPO_ROOT/yolox-service"
+
+if [ -f "venv/bin/python" ]; then
+    PYTHON="venv/bin/python"
+else
+    PYTHON="python3"
+fi
+
+$PYTHON -m pip install --quiet flake8 black mypy
+
+echo "  black..."
+if ! $PYTHON -m black --check --quiet ./yolox-consumer; then
+    echo "black: formatting issues found. Run 'black .' to fix."
+    FAILED=1
+else
+    echo "black"
+fi
+
+echo "  flake8..."
+if ! $PYTHON -m flake8 ./yolox-consumer --exclude=venv,__pycache__,yolox --max-line-length=120 --quiet; then
+    echo "flake8: lint errors found."
+    FAILED=1
+else
+    echo "flake8"
+fi
+
+if ! $PYTHON -m mypy .; then
+    echo "mypy: type errors found."
+    FAILED=1
+else
+    echo "mypy"
+fi
+
+
+echo ""
+echo "dashboard"
+cd "$REPO_ROOT/dashboard"
+
+if [ ! -d "node_modules" ]; then
+    echo "node_modules not found, running npm install..."
+    npm install --silent
+fi
+
+echo "  eslint..."
+if ! npx eslint . --ext .ts,.tsx --quiet 2>/dev/null; then
+    echo "eslint: lint errors found."
+    FAILED=1
+else
+    echo "eslint"
+fi
+
+echo "  tsc..."
+if ! npx tsc --noEmit 2>/dev/null; then
+    echo "tsc: type errors found."
+    FAILED=1
+else
+    echo "tsc"
+fi
+
+echo ""
+if [ $FAILED -ne 0 ]; then
+    echo "Pre-commit failed. Fix the issues above before committing."
+    exit 1
+fi
+
+echo "All pre-commit checks passed."
+exit 0
