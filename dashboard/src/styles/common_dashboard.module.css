@@ -1,111 +1,180 @@
 /* ============================================================================
- *  Layout Wrapper (Negative Space / Deep Background)
- * ============================================================================ */
-
+   Layout Wrapper
+   ============================================================================ */
 .layoutWrapper {
-    display         : flex;
-    width           : 100vw;
-    height          : 100vh;
-    margin          : 0;
-    overflow        : hidden;
-    background-color: #09090b;     /* Zinc-950 */
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    background-color: #09090b; /* Zinc-950 */
 }
 
-
 /* ============================================================================
- *  Sidebar (30%)
- * ============================================================================ */
-
+   Sidebar (30%)
+   ============================================================================ */
 .sidebar {
-    display         : flex;
-    flex-direction  : column;
-    width           : 30%;
-    height          : 100%;
-    padding         : 2.5rem;
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+    height: 100%;
+    padding: 2.5rem;
 }
 
 /* ============================================================================
- *  Main Content (70%)
- * ============================================================================ */
-
+   Main Content (70%)
+   ============================================================================ */
 .mainContent {
-    width           : 70%;
-    height          : 100%;
-    padding         : 2.5rem 2.5rem 2.5rem 0;
-    overflow-y      : auto;
+    position: relative; /* Anchors the arrows */
+    width: 70%;
+    height: 100%;
+    /* Switched to symmetrical horizontal padding (0 on top/bottom) */
+    /* This padding acts as the "inner boundary" for the arrows */
+    padding: 0 2.5rem; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Vertically center pages within this area */
+    overflow: hidden; 
 }
+
+/* ============================================================================
+   Nav Arrows (Floating Loop Controls)
+   ============================================================================ */
+.navArrowLeft,
+.navArrowRight {
+    position: absolute;
+    top: 50%;
+    /* Symmetrical Vertical Alignment */
+    transform: translateY(-50%); 
+    z-index: 100;
+    
+    /* Visual Size */
+    width: 3.75rem; 
+    height: 3.75rem;
+    
+    background: rgba(24, 24, 27, 0.6); /* Zinc-900 with transparency */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    
+    /* Transitions */
+    opacity: 0;
+    transition: opacity 0.3s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+/* --- Positioning relative to the VISIBLE area --- */
+.navArrowLeft {
+    /* Set to 0 because we handle the padding in the mainContent parent */
+    left: 1.25rem; 
+}
+
+.navArrowRight {
+    right: 1.25rem;
+}
+/* ============================================================================
+   Enlarged Detection Range (Hit Area)
+   ============================================================================ */
+.navArrowLeft:hover,
+.navArrowRight:hover {
+    opacity: 1;
+    background: rgba(39, 39, 42, 0.9); /* Zinc-800 */
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Add an invisible larger hover box using ::before */
+.navArrowLeft::before,
+.navArrowRight::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    
+    /* This defines the larger "hit zone" */
+    width: 15rem; /* Wide capture zone */
+    height: 30rem; /* Tall capture zone (covers most of the screen height) */
+    
+    /* We need to offset this hit area so it is centered on the arrow */
+    background-color: transparent; /* Invisible */
+}
+
+/* Fine-tune the invisible offsets so they don't overlap in the center */
+.navArrowLeft::before {
+    left: -2.5rem; /* Start capturing well to the left of the arrow */
+}
+
+.navArrowRight::before {
+    right: -2.5rem; /* Start capturing well to the right of the arrow */
+}
+
 
 
 /* ============================================================================
- *  Dashboard Grid
- * ============================================================================ */
-
-.dashboardGrid {
-    display         : grid;
-    grid-template-columns
-                    : repeat(2, 1fr);
-    gap             : 2rem;
+   Page Container
+   ============================================================================ */
+.pageContainer {
+    width: 100%;
+    height: 100%;
+    /* Add top/bottom padding here so content doesn't hit the screen edges */
+    padding: 2.5rem 0; 
+    overflow-y: auto; /* Scroll individual pages here */
+    position: relative; /* Context for children */
+    z-index: 1; /* Keep page content behind arrows */
 }
 
+/* ============================================================================
+   Dashboard Grid & Bubbles
+   ============================================================================ */
+.dashboardGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
 
 .fullWidth {
-    grid-column     : span 2;
+    grid-column: span 2;
 }
-
-
-/* ============================================================================
- *  Floating Bubbles ("Islands")
- * ============================================================================ */
 
 .bubble {
-    padding         : 2rem;
-    border-radius   : 32px;
-    background-color: #18181b;     /* Zinc-900 */
-    border          : 1px solid
-                      rgba(255, 255, 255, 0.03);
-    box-shadow      : 0 25px 50px -12px
-                      rgba(0, 0, 0, 0.7);
+    padding: 2rem;
+    border-radius: 2rem; /* Matches 32px roughly but uses rem */
+    background-color: #18181b; /* Zinc-900 */
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    transition: border-color 0.3s ease;
 }
 
-
 .bubble:hover {
-    border-color    : rgba(255, 255, 255, 0.08);
-    transition      : border-color 0.3s ease;
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .sidebar .bubble {
-    flex            : 1;
-    display         : flex;
-    flex-direction  : column;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ============================================================================
- *  Secondary Header
- * ============================================================================ */
-
+   Typography
+   ============================================================================ */
 .secondHeaderFormat {
-    font-family     : 'Space Mono', monospace;
-    font-size       : 2rem;         /* text-2xl */
-    line-height     : 2rem;
-    font-weight     : 700;          /* bold */
-    margin-bottom   : 1.5rem;
-    color           : aliceblue;
+    font-family: 'Space Mono', monospace;
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: aliceblue;
 }
 
 .thirdHeaderFormat {
-    font-family     : 'Space Mono', monospace;
-    font-size       : 1rem;         /* text-2xl */
-    display         : flex;
-    justify-content : space-between;
-    align-items     : center;
-    color           : #aeadad;
-    padding-bottom  : 0.25rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #aeadad;
+    padding-bottom: 0.25rem;
 }
-
-
-
-
-
-
-
-

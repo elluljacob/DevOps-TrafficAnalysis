@@ -1,0 +1,157 @@
+
+import am_styles from '@/styles/admin.module.css'
+import { StreamObject } from '@/types/stream';
+
+
+/* ============================================================================
+ * InputField Component
+ * ----------------------------------------------------------------------------
+ * Reusable input wrapper used for all text/number/password inputs in the form.
+ * ============================================================================
+ */
+interface InputOptions {
+    label        : string;          name         : string;
+    value        : string | number;
+    type        ?: string;          min         ?: number;
+    max         ?: number;          step        ?: string;
+    placeholder ?: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+}
+
+function InputField(options: InputOptions) {
+    return (
+        <div className={am_styles.inputGroup}>
+
+            <label>{options.label}</label>
+
+            <input
+                id          ={options.name}     name        ={options.name}
+                type        ={options.type}     value       ={options.value}
+                min         ={options.min}      max         ={options.max}
+                step        ={options.step}     placeholder ={options.placeholder}
+                onChange    ={options.onChange} className   ={am_styles.inputField}
+            />
+
+        </div>
+    )
+}
+
+
+
+/* ============================================================================
+ * CoordInput Component
+ * ----------------------------------------------------------------------------
+ * Specialized input group for handling latitude and longitude values.
+ * ============================================================================
+ */
+interface CoordOptions {
+    latitude: number
+    longitude: number
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+}
+function CoordInput(options: CoordOptions) {
+
+    return (
+
+        <div className={am_styles.coordRow}>
+
+            <InputField
+                label   ="Latitude"     name        ="lat"
+                type    ="number"       value       ={options.latitude}
+                min     ={-90}          max         ={90}
+                step    ="any"          onChange    ={options.onChange}
+            />
+
+            <InputField
+                label   ="Longitude"    name        ="long"
+                type    ="number"       value       ={options.longitude}
+                min     ={-180}         max         ={180}
+                step    ="any"          onChange    ={options.onChange}
+            />
+
+        </div>
+
+    )
+}
+
+/* ============================================================================
+ * CameraForm Component
+ * ----------------------------------------------------------------------------
+ * Handles all camera creation and editing functionality.
+ * Uses reusable input components for cleaner UI code.
+ * ============================================================================
+ */
+interface FormOptions {
+    data                : StreamObject
+    password            : string
+    isEditing           : boolean
+    onChange            : (e: React.ChangeEvent<HTMLInputElement>) => void
+    onPasswordChange    : (value: string) => void
+    onSubmit            : (e: React.SubmitEvent<HTMLFormElement>) => void
+    onCancel            : () => void
+}
+
+export function StreamForm(options: FormOptions) {
+
+    return (
+
+        <section className={am_styles.formBox}>
+
+            <h2>{options.isEditing ? "Update Camera" : "Add Camera"}</h2>
+
+            <form onSubmit={options.onSubmit} className={am_styles.adminForm}>
+
+                <InputField
+                    label="Stream ID"               name="ID"
+                    value={options.data.ID}         onChange={options.onChange}
+                />
+
+                <InputField
+                    label="Location"                name="loc"
+                    value={options.data.loc}        onChange={options.onChange}
+                />
+
+                <InputField
+                    label="Stream URL"              name="url"
+                    value={options.data.url}        onChange={options.onChange}
+                />
+
+                <CoordInput
+                    latitude ={options.data.lat}
+                    longitude={options.data.long}
+                    onChange ={options.onChange}
+                />
+
+                <InputField
+                    label   ="Admin Password"       name    ="password"
+                    type    ="password"             value={options.password}
+
+                    placeholder="Required for DB changes"
+                    onChange={(e) => options.onPasswordChange(e.target.value)}
+                />
+
+                <div className={am_styles.buttons}>
+
+                    <button 
+                        type="submit"
+                        className='saveBtn'>
+                        {options.isEditing ? "Confirm Changes" : "Add Camera"}
+                    </button>
+
+                    {options.isEditing &&
+                        <button
+                            type="button"
+                            className={am_styles.cancelBtn}
+                            onClick={options.onCancel}
+                        >
+                            Cancel
+                        </button>
+                    }
+
+                </div>
+
+            </form>
+
+        </section>
+    )
+}

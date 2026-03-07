@@ -1,0 +1,130 @@
+.pageContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+
+.formBox, .tableBox {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #333;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.adminForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    background: #1e1e1e; /* Slightly lighter gray */
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid #333;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #bbb;
+}
+.inputField {
+    padding: 12px;
+    background: #2c2c2c;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #fff;
+    outline: none;
+}
+
+.inputField:focus {
+    border-color: #007bff;
+}
+
+.passwordField {
+    border: 2px solid #5c6bc0 !important;
+}
+
+.buttonStack {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.saveBtn {
+    flex: 2;
+    padding: 12px;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.coordRow{
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+.cancelBtn {
+    flex: 1;
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.tableSection {
+    margin-top: 3rem;
+    overflow-x: auto;
+}
+
+.tableScroll {
+    flex: 1; /* fill available vertical space */
+    overflow-y: auto;
+}
+
+.cameraTable {
+    width: 100%;
+    border-collapse: collapse;
+    background: #1e1e1e;
+    border-radius: 8px;
+}
+
+.cameraTable th {
+    background: #2c2c2c;
+    padding: 15px;
+    text-align: left;
+    color: #888;
+}
+
+.cameraTable td {
+    padding: 15px;
+    border-bottom: 1px solid #333;
+}
+.editLink {
+    color: #4dabf7;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.deleteLink {
+    color: #ff6b6b;
+    background: none;
+    border: none;
+    cursor: pointer;
+}

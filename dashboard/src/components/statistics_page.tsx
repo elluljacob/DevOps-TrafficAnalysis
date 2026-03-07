@@ -55,7 +55,7 @@ function TrafficChartTimeline({
     setCamera: (val: CameraObject) => void
 }) {
     return (
-        <div className={`${cd_styles.bubble} ${cd_styles.fullWidth}`}>
+        <div className={`${cd_styles.bubble} ${cd_styles.fullWidth} ${st_styles.timeBubble}`}>
             <div className={st_styles.timeStatusBar}>
                 <h3 className={cd_styles.thirdHeaderFormat}>
                     Real-time Telemetry
@@ -94,9 +94,6 @@ function SimplePieCharts({
 }: {
     pieData?: PieChartResult[]
 }) {
-    if (!pieData || pieData.length === 0) {
-        return <div>No pie chart data available.</div>
-    }
 
     return (
         <div className={st_styles.pieRow}>
@@ -201,19 +198,28 @@ export default function StatisticsPage() {
     const [range, setRange] = useState<TimeRange>('live')
     const [camera, setCamera] = useState<CameraObject>('cam1')
 
+    // Fetch both datasets
     const pieData = usePieData(range)
     const history = useCameraHistory(range, camera)
 
+    // Determine if the "First Stage" (Pies) is ready
+    const isPieDataLoaded = pieData && pieData.length > 0
+
     return (
         <>
+            {/* 1. Pie charts load/animate as soon as data arrives */}
             <SimplePieCharts pieData={pieData} />
-            <TrafficChartTimeline
-                history={history}
-                range={range}
-                camera={camera}
-                setRange={setRange}
-                setCamera={setCamera}
-            />
+
+            {/* 2. Timeline only enters the DOM once pieData is ready */}
+            {isPieDataLoaded && (
+                <TrafficChartTimeline
+                    history={history}
+                    range={range}
+                    camera={camera}
+                    setRange={setRange}
+                    setCamera={setCamera}
+                />
+            )}
         </>
     )
 }

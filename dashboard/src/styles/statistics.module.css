@@ -25,47 +25,33 @@
     flex-direction: row;
 }
 
-
-
-
-
-
-
-
-
-
-.crosshair-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+@keyframes bubbleEntry {
+    0% {
+        opacity: 0;
+        transform: translateY(2rem) scale(0.98);
+        filter: blur(10rem);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
 }
 
-.crosshair {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid white;
-  position: relative;
-  background-color: #ef4444; /* Default Red */
-  box-shadow: 0 0 5px rgba(0,0,0,0.5);
-  transition: background-color 0.2s ease;
+
+/* ============================================================================
+   Targeted Animations
+   ============================================================================ */
+
+/* Target the specific bubbles for animation */
+.pieBubble {
+    /* Starts animating immediately when data is injected */
+    animation: bubbleEntry 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
 
-.crosshair.active {
-  background-color: #22c55e; /* Active Green */
+.timeBubble {
+    /* Once the data-gate opens, it waits 0.3s so the user sees 
+       the pie charts finish their animation first */
+    animation: bubbleEntry 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
-
-/* The "Cross" lines */
-.crosshair::before, .crosshair::after {
-  content: '';
-  position: absolute;
-  background-color: white;
-}
-
-.crosshair::before { width: 10px; height: 2px; top: 7px; left: 3px; } /* Horizontal */
-.crosshair::after { width: 2px; height: 10px; top: 3px; left: 7px; }  /* Vertical */
-
-
-
-
 
