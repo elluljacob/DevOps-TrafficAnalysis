@@ -108,6 +108,18 @@ else
 fi
 
 echo ""
+echo "secret scan"
+cd "$REPO_ROOT"
+
+echo "  gitleaks..."
+if ! gitleaks detect --source . --no-banner; then
+    echo "gitleaks: secrets found. Remove them before committing."
+    FAILED=1
+else
+    echo "gitleaks"
+fi
+
+echo ""
 if [ $FAILED -ne 0 ]; then
     echo "Pre-commit failed. Fix the issues above before committing."
     exit 1
@@ -115,3 +127,4 @@ fi
 
 echo "All pre-commit checks passed."
 exit 0
+

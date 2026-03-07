@@ -1,0 +1,10 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignore virtual environments"
+paths = [
+    '''venv/''',
+    '''\.venv/''',
+    '''node_modules/'''
+]
