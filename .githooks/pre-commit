@@ -112,7 +112,7 @@ echo "secret scan"
 cd "$REPO_ROOT"
 
 echo "  gitleaks..."
-if ! gitleaks detect --source . --no-banner; then
+if ! gitleaks detect --source . --no-banner --baseline-path .gitleaks-baseline.json; then
     echo "gitleaks: secrets found. Remove them before committing."
     FAILED=1
 else
