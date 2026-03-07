@@ -117,7 +117,7 @@ echo "filesystem scan"
 cd "$REPO_ROOT"
 
 echo "  trivy..."
-if ! trivy fs . --severity HIGH,CRITICAL --quiet --exit-code 1; then
+if ! trivy fs . --severity HIGH,CRITICAL --quiet --exit-code 1 --ignorefile .trivyignore; then
     echo "trivy: HIGH/CRITICAL vulnerabilities found."
     FAILED=1
 else
