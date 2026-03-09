@@ -1,6 +1,7 @@
 
 import am_styles from '@/styles/admin.module.css'
 import { StreamObject } from '@/types/stream';
+import cd_styles        from '@/styles/common_dashboard.module.css'
 
 
 /* ============================================================================
@@ -11,7 +12,7 @@ import { StreamObject } from '@/types/stream';
  */
 interface InputOptions {
     label        : string;          name         : string;
-    value        : string | number;
+    value        : string | number; // This allows the "" trick
     type        ?: string;          min         ?: number;
     max         ?: number;          step        ?: string;
     placeholder ?: string;
@@ -21,21 +22,19 @@ interface InputOptions {
 function InputField(options: InputOptions) {
     return (
         <div className={am_styles.inputGroup}>
-
-            <label>{options.label}</label>
-
+            <label className={cd_styles.thirdHeaderFormat}>{options.label}</label>
             <input
                 id          ={options.name}     name        ={options.name}
                 type        ={options.type}     value       ={options.value}
                 min         ={options.min}      max         ={options.max}
                 step        ={options.step}     placeholder ={options.placeholder}
                 onChange    ={options.onChange} className   ={am_styles.inputField}
+                // Optional: select text on click so user can overwrite 0 easily
+                onFocus     ={(e) => e.target.select()} 
             />
-
         </div>
     )
 }
-
 
 
 /* ============================================================================
@@ -50,30 +49,29 @@ interface CoordOptions {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 function CoordInput(options: CoordOptions) {
-
     return (
-
         <div className={am_styles.coordRow}>
-
             <InputField
                 label   ="Latitude"     name        ="lat"
-                type    ="number"       value       ={options.latitude}
+                type    ="number"       
+                // If value is 0, send empty string to let placeholder show
+                value   ={options.latitude === 0 ? "" : options.latitude} 
                 min     ={-90}          max         ={90}
                 step    ="any"          onChange    ={options.onChange}
+                placeholder="0" // This acts as the "hidden suggestion"
             />
 
             <InputField
                 label   ="Longitude"    name        ="long"
-                type    ="number"       value       ={options.longitude}
+                type    ="number"       
+                value   ={options.longitude === 0 ? "" : options.longitude} 
                 min     ={-180}         max         ={180}
                 step    ="any"          onChange    ={options.onChange}
+                placeholder="0"
             />
-
         </div>
-
     )
 }
-
 /* ============================================================================
  * CameraForm Component
  * ----------------------------------------------------------------------------
@@ -95,9 +93,13 @@ export function StreamForm(options: FormOptions) {
 
     return (
 
-        <section className={am_styles.formBox}>
+        <section className={`${cd_styles.indentedBubble} ${am_styles.formBox}`}>
 
-            <h2>{options.isEditing ? "Update Camera" : "Add Camera"}</h2>
+            <h2 className={cd_styles.secondHeaderFormatSmall}>
+                {options.isEditing ? "Update Camera" : "Add Camera"}
+            </h2>
+            
+            <div className={cd_styles.sectionSeparator}></div>
 
             <form onSubmit={options.onSubmit} className={am_styles.adminForm}>
 
@@ -133,9 +135,13 @@ export function StreamForm(options: FormOptions) {
                 <div className={am_styles.buttons}>
 
                     <button 
-                        type="submit"
-                        className='saveBtn'>
-                        {options.isEditing ? "Confirm Changes" : "Add Camera"}
+                        type="submit" 
+                        className={am_styles.saveBtn}
+                        onClick={options.onCancel}
+                    >
+                        <svg>
+                            <use href="/save.svg#icon" />
+                        </svg>
                     </button>
 
                     {options.isEditing &&
@@ -144,7 +150,9 @@ export function StreamForm(options: FormOptions) {
                             className={am_styles.cancelBtn}
                             onClick={options.onCancel}
                         >
-                            Cancel
+                            <svg>
+                                <use href="/cancel.svg#icon" />
+                            </svg>
                         </button>
                     }
 

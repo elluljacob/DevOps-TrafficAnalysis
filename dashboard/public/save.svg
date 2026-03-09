@@ -1,0 +1,7 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon" viewBox="0 0 32 32">
+    <path 
+      d="M28,0 L4,0 C1.791,0 0,1.791 0,4 L0,28 C0,30.209 1.791,32 4,32 L28,32 C30.209,32 32,30.209 32,28 L32,4 C32,1.791 30.209,0 28,0 Z M10,2 L22,2 L22,10 L10,10 L10,2 Z M26,30 L6,30 L6,18 L26,18 L26,30 Z" 
+      fill="currentColor" />
+  </symbol>
+</svg>

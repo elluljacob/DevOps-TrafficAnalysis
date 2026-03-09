@@ -36,18 +36,16 @@ function StatusItem({ label, value, color }:
  */
 function TrafficControlStatus() {
     return (
-        <div className={tc_styles.statusContainer}>
-            <div className={tc_styles.statusList}>
-                <StatusItem 
-                    label="API Latency"    value="24ms"  color="text-green-500"
-                />
-                <StatusItem 
-                    label="Active Sensors" value="142"   color="text-blue-500"  
-                />
-                <StatusItem 
-                    label="Uptime"         value="99.9%" color="text-green-500" 
-                />
-            </div>
+        <div className={`${cd_styles.indentedBubble} ${tc_styles.statusContainer}`}>
+            <StatusItem 
+                label="API Latency"    value="24ms"  color="text-green-500"
+            />
+            <StatusItem 
+                label="Active Sensors" value="142"   color="text-blue-500"  
+            />
+            <StatusItem 
+                label="Uptime"         value="99.9%" color="text-green-500" 
+            />
         </div>
     )
 }
@@ -83,11 +81,7 @@ export default function TrafficControls() {
         <div className={`${cd_styles.bubble} ${tc_styles.container}`}>
             <h2 className={cd_styles.secondHeaderFormat}>Control Center</h2>
 
-            <h3 className={cd_styles.thirdHeaderFormat}>
-                Time Range
-            </h3>
-
-            <div className={tc_styles.sectionSeparator}></div>
+            <div className={cd_styles.sectionSeparator}></div>
 
             <h3 className={cd_styles.thirdHeaderFormat}>
                 Node Status

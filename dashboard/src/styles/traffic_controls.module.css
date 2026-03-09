@@ -4,25 +4,31 @@
 
 :root {
     --font-mono       : 'Cascadia Mono', monospace;
-    --third-colour    : #282828;         /* pure dark background */
+    --third-colour    : #1d1d21;         /* pure dark background */
 }
 
 
 /* ============================================================================
  *  Container
  * ============================================================================ */
-
+/* ============================================================================
+   Container (Internal)
+   ============================================================================ */
 .container {
-    font-family       : var(--font-mono);
-    padding           : 1rem;
-    border-radius     : 0.5rem;
-    height            : 100%;           /* full height sidebar */
-    box-sizing        : border-box;
-
-    overflow-y        : auto;
-    overflow-x        : hidden;
+    font-family: var(--font-mono);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    
+    /* 1. Ensure it takes the full height of the sidebar */
+    height: 100%; 
+    box-sizing: border-box;
+    
+    /* 2. Change 'hidden' to 'auto' to allow scrolling */
+    overflow-y: auto; 
+    overflow-x: hidden;
 }
 
+/* 3. Add the scrollbar styling back here so it only shows when needed */
 .container::-webkit-scrollbar {
     width: 6px;
 }
@@ -32,20 +38,13 @@
     border-radius: 10px;
 }
 
-
-
-
-/* ============================================================================
- *  Section Separator
- * ============================================================================ */
-
-.sectionSeparator {
-    height             : 2px;
-    width              : 100%;
-    background-color   : #2c2c2c;        /* subtle gray line */
-    margin             : 1rem 0;
-    border-radius      : 1px;
+.container::-webkit-scrollbar-track {
+    background: transparent;
 }
+
+
+
+
 
 
 /* ============================================================================
@@ -67,21 +66,11 @@
     margin-bottom      : 0.5rem;
 }
 
-.statusList {
-    border-radius       : 0.5rem;
-    padding             : 0.4rem;
-    background-color    : var(--third-colour);  /* darker panel */
-    display             : flex;
-    flex-direction      : column;
-    gap                 : 0.5rem;
-}
-
 .statusItem {
     font-family        : var(--font-mono);
     display            : flex;
     justify-content    : space-between;
     align-items        : center;
-    border-bottom      : 1px solid #2c2c2c; /* subtle divider */
     padding-bottom     : 0.25rem;
 }
 
@@ -96,14 +85,3 @@
     color              : #e5e7eb;          /* bright enough for contrast */
 }
 
-
-
-/* ============================================================================
- *  Map
- * ============================================================================ */
-
-.mapFilter{
-    height          : 100%;
-    min-height      : 5rem;
-    width           : 100%;
-}

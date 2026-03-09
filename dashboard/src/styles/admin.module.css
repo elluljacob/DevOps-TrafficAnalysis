@@ -1,46 +1,41 @@
 .pageContainer {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;       /* Allows the table to move underneath if space is tight */
     gap: 2rem;
     padding: 2rem;
-    max-width: 1200px;
+    width: 100%;
     margin: 0 auto;
-    min-height: 100vh;
+    min-height: 100%;      /* Changed from height to min-height for content growth */
+    box-sizing: border-box; /* Ensures padding doesn't push width over 100% */
 }
 
 
 .formBox, .tableBox {
-    flex: 1;
+    flex: 1 1 30rem;       /* Grow, Shrink, and a 'Basis' of 30rem */
     display: flex;
     flex-direction: column;
-    background: #1e1e1e;
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid #333;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    
+    /* Crucial: prevents the table from forcing the container to grow horizontally */
+    min-width: 0; 
 }
-
 .adminForm {
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
-    background: #1e1e1e; /* Slightly lighter gray */
-    padding: 2rem;
-    border-radius: 12px;
-    border: 1px solid #333;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .inputGroup {
+    font-family: 'Cascadia Mono', monospace;;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     font-size: 0.9rem;
     color: #bbb;
+    margin-top: 1rem;
 }
 .inputField {
     padding: 12px;
-    background: #2c2c2c;
+    background: #1c1c1f;
     border: 1px solid #444;
     border-radius: 6px;
     color: #fff;
@@ -63,14 +58,44 @@
 
 .saveBtn {
     flex: 2;
-    padding: 12px;
-    background: #4caf50;
+    padding: 1rem;
+    /* Darker, less saturated green */
+    background: #3e6b40; 
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
+    width: 100%;
+    
+    /* Centering the SVG */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
 }
+
+
+.saveBtn:hover {
+    background: #345a36; /* Slightly darker on hover */
+}
+
+.saveBtn svg {
+    /* Ensures the SVG doesn't intercept the click event */
+    pointer-events: none;
+    width:2rem; 
+    height:2rem; 
+    color: #ffffff;
+    opacity: 1;
+}
+
+/* Ensure the container for buttons has enough margin */
+.buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
 .coordRow{
     flex: 1;
     display: flex;
@@ -78,17 +103,40 @@
     gap: 1rem;
 }
 .cancelBtn {
-    flex: 1;
-    background: #444;
+    flex: 2;
+    padding: 1rem;
+    /* Darker, less saturated green */
+    background: #3e6b40; 
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: bold;
+    width: 20%;
+    
+    /* Centering the SVG */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
 }
 
+
+.cancelBtn:hover {
+    background: #345a36; /* Slightly darker on hover */
+}
+.cancelBtn svg {
+    /* Ensures the SVG doesn't intercept the click event */
+    pointer-events: none;
+    width:2rem; 
+    height:2rem; 
+    color: #ffffff;
+    opacity: 1;
+}
 .tableSection {
-    margin-top: 3rem;
+    width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
 }
 
 .tableScroll {

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import am_styles from '@/styles/admin.module.css'
+import cd_styles from '@/styles/common_dashboard.module.css'
 import { StreamObject } from '@/types/stream';
 import { StreamProvider, useStreams} from '@/components/global/stream_list';
 import { StreamForm } from '@/components/admin_page/stream_form';
@@ -31,7 +32,7 @@ function AdminContent() {
     const handlers = useHandlers()
 
     return (
-        <div className={am_styles.pageContainer}>
+        <div className={`${am_styles.pageContainer} ${cd_styles.bubble}`}>
             <StreamForm
                 data             ={handlers.formData}
                 password         ={handlers.password}

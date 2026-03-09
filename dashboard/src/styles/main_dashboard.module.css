@@ -1,0 +1,114 @@
+/* ============================================================================
+   Layout Wrapper
+   ============================================================================ */
+.layoutWrapper {
+    display: flex;
+    flex-direction: row;
+    width: calc(100% - 4rem); 
+    height: calc(100% - 4rem);
+    overflow: hidden;
+    margin: 2rem;
+    background-color: #09090b; /* Zinc-950 */
+    gap: 2rem;
+    border-radius: 1rem;
+}
+
+/* ============================================================================
+   Sidebar (30%)
+   ============================================================================ */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+    height: 100%;
+}
+
+/* ============================================================================
+   Main Content (70%)
+   ============================================================================ */
+.mainContent {
+    position: relative; 
+    width: 70%;
+    height: 100%;
+    padding: 2.5rem; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden; 
+}
+
+/* ============================================================================
+   Trigger Zones (The "Detection Range")
+   ============================================================================ */
+.triggerZoneLeft,
+.triggerZoneRight {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 10%; /* Adjust this to make the "invisible" detection wider or narrower */
+    z-index: 100;
+    display: flex;
+    align-items: center; /* Vertically center the arrow within the zone */
+    pointer-events: auto; /* Ensure it catches the mouse */
+}
+
+.triggerZoneLeft {
+    left: 0;
+    justify-content: flex-start;
+    padding-left: 1.5rem;
+}
+
+.triggerZoneRight {
+    right: 0;
+    justify-content: flex-end;
+    padding-right: 1.5rem;
+}
+
+/* ============================================================================
+   Nav Arrows (The Visual Button)
+   ============================================================================ */
+.navArrowLeft,
+.navArrowRight {
+    /* Resetting absolute positioning because the TriggerZone handles it */
+    position: relative;
+    width: 3.75rem; 
+    height: 3.75rem;
+    
+    background: rgba(24, 24, 27, 0.6); /* Zinc-900 with transparency */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    outline: none;
+    
+    /* Initial state: Hidden */
+    opacity: 0;
+    transform: scale(0.9);
+    transition: 
+        opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+        background 0.2s ease;
+}
+
+/* --- Visibility Logic: When ZONE is hovered, show BUTTON --- */
+.triggerZoneLeft:hover .navArrowLeft,
+.triggerZoneRight:hover .navArrowRight {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* --- Direct Button Interaction (The "Pop") --- */
+.navArrowLeft:hover,
+.navArrowRight:hover {
+    background: rgba(39, 39, 42, 0.9); /* Zinc-800 */
+    transform: scale(1.1) !important; /* Slightly larger when directly touching the button */
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.navArrowLeft:active,
+.navArrowRight:active {
+    transform: scale(0.95) !important; /* Feedback when clicking */
+}

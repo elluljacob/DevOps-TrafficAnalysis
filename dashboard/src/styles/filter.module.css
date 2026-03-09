@@ -62,3 +62,19 @@
     display: flex;
     gap: 12px;
 }
+
+
+/* ============================================================================
+ *  Map
+ * ============================================================================ */
+
+.mapFilter {
+    width: 100%;
+    aspect-ratio: 1 / 0.8; /* Forces the height to match the width */
+    min-height: 5rem;    /* Ensures it never shrinks below this */
+    margin-bottom: 1rem;
+    
+    /* Optional: Ensure content doesn't break the square */
+    overflow: hidden; 
+    border-radius: 1rem;
+}

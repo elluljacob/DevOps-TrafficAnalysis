@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import styles from '@/styles/common_dashboard.module.css'
+import cd_styles from '@/styles/common_dashboard.module.css'
+import md_styles from '@/styles/main_dashboard.module.css'
 import TrafficControls from '@/components/traffic_controller'
 import StatisticsPage from '@/components/statistics_page'
 import AdminPage from '@/components/admin_page'
@@ -74,8 +75,8 @@ export default function SwappableDashboard() {
     }, [index, displayPages.length]);
 
     return (
-        <div className={styles.layoutWrapper}>
-            <aside className={styles.sidebar}>
+        <div className={md_styles.layoutWrapper}>
+            <aside className={md_styles.sidebar}>
                 <TrafficControls />
             </aside>
 
@@ -83,19 +84,18 @@ export default function SwappableDashboard() {
             <main className="relative flex-1 h-full overflow-hidden ">
                 
                 {/* Navigation - Absolute so they stay pinned while pages slide */}
-                <button 
-                    className="absolute left-4 top-1/2 z-30 -translate-y-1/2 bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"
-                    onClick={prev}
-                >
-                    <ChevronLeft />
-                </button>
-                
-                <button 
-                    className="absolute right-4 top-1/2 z-30 -translate-y-1/2 bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"
-                    onClick={next}
-                >
-                    <ChevronRight />
-                </button>
+                <div className={md_styles.triggerZoneLeft}>
+                    <button className={md_styles.navArrowLeft} onClick={prev}>
+                        <ChevronLeft />
+                    </button>
+                </div>
+
+                {/* Right Side Trigger */}
+                <div className={md_styles.triggerZoneRight}>
+                    <button className={md_styles.navArrowRight} onClick={next}>
+                        <ChevronRight />
+                    </button>
+                </div>
 
                 {/* The Sliding Track */}
                 <div 

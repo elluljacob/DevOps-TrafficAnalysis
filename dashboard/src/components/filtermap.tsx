@@ -5,6 +5,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet-defaulticon-compatibility";
+import ft_styles        from '@/styles/filter.module.css'
+
 
 
 
@@ -105,7 +107,7 @@ export default function Map({ cameras, toggleCamera, zoom = 13 }: MapProps) {
   return (
     <div
       ref={containerRef}
-      style={{ height: "400px", width: "100%", borderRadius: "8px" }}
+      className={ft_styles.mapFilter}
     />
   );
 }
