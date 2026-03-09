@@ -9,8 +9,12 @@ import os
 import queue
 import threading
 import time
+import urllib.parse
 from typing import Any, Dict, List, Optional
+
 import cv2
+
+import psycopg2
 
 from rabbit_publisher import RabbitPublisher
 
@@ -28,6 +32,11 @@ def utc_iso_now() -> str:
         .isoformat(timespec="milliseconds")
         .replace("+00:00", "Z")
     )
+
+
+# ---------------------------------------------------------------------------
+# Stream loading — JSON file (original v1) or PostgreSQL (from v2)
+# ---------------------------------------------------------------------------
 
 
 def load_streams(path: str) -> List[StreamConfig]:
@@ -50,6 +59,120 @@ def load_streams(path: str) -> List[StreamConfig]:
             )
         )
     return streams
+
+
+def replace_host_with_localhost(url: str) -> str:
+    parsed = urllib.parse.urlparse(url)
+    if not parsed.hostname:
+        return url
+    replaced = parsed._replace(
+        netloc=parsed.netloc.replace(parsed.hostname, "localhost", 1)
+    )
+    return urllib.parse.urlunparse(replaced)
+
+
+def load_streams_from_db(
+    host: str,
+    port: int,
+    dbname: str,
+    user: str,
+    password: str,
+    use_localhost: bool = False,
+) -> List[StreamConfig]:
+    log = logging.getLogger("load_streams")
+    conn = psycopg2.connect(
+        host=host,
+        port=port,
+        dbname=dbname,
+        user=user,
+        password=password,
+        connect_timeout=10,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT stream_id, location, url FROM streams")
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        raise ValueError("No streams found in the database")
+
+    streams: List[StreamConfig] = []
+    for stream_id, location, url in rows:
+        if not stream_id or not location or not url:
+            log.warning(
+                "Skipping incomplete stream row: id=%s location=%s url=%s",
+                stream_id,
+                location,
+                url,
+            )
+            continue
+        if use_localhost:
+            url = replace_host_with_localhost(url)
+        streams.append(
+            StreamConfig(
+                stream_id=str(stream_id),
+                location=str(location),
+                url=str(url),
+            )
+        )
+        log.info("Loaded stream id=%s location=%s url=%s", stream_id, location, url)
+
+    return streams
+
+
+# ---------------------------------------------------------------------------
+# DB polling — periodically refresh the stream list and spin up new threads
+# ---------------------------------------------------------------------------
+
+
+def db_poll_loop(
+    db_args: Dict[str, Any],
+    use_localhost: bool,
+    poll_interval_s: float,
+    active_streams: Dict[str, threading.Thread],
+    out_q: "queue.Queue[Dict[str, Any]]",
+    interval_s: float,
+    jpeg_quality: int,
+    stop_event: threading.Event,
+) -> None:
+    """Polls the DB every `poll_interval_s` seconds.
+
+    For any stream_id not already being captured, a new capture thread is
+    started. Streams that disappear from the DB are *not* forcibly killed —
+    their capture threads will eventually fail and log a warning, which keeps
+    the implementation simple and avoids needing per-thread stop events.
+    If you need hard removal, that can be added later.
+    """
+    log = logging.getLogger("db_poll")
+    while not stop_event.wait(poll_interval_s):
+        try:
+            fresh = load_streams_from_db(use_localhost=use_localhost, **db_args)
+        except Exception as e:
+            log.error("DB poll failed: %s", e)
+            continue
+
+        for cfg in fresh:
+            if (
+                cfg.stream_id in active_streams
+                and active_streams[cfg.stream_id].is_alive()
+            ):
+                continue  # already running
+            log.info("Starting capture thread for new stream id=%s", cfg.stream_id)
+            t = threading.Thread(
+                target=stream_capture_loop,
+                name=f"capture:{cfg.stream_id}",
+                daemon=True,
+                args=(cfg, interval_s, jpeg_quality, out_q, stop_event),
+            )
+            t.start()
+            active_streams[cfg.stream_id] = t
+
+
+# ---------------------------------------------------------------------------
+# Frame capture
+# ---------------------------------------------------------------------------
 
 
 def encode_frame_jpeg_base64(frame, jpeg_quality: int) -> str:
@@ -93,8 +216,12 @@ def stream_capture_loop(
                         cap.release()
                     except Exception:
                         pass
+                log.warning("Opening stream url=%s", cfg.url)
                 cap = open_capture()
                 if not cap.isOpened():
+                    log.error(
+                        "Failed to open stream. Retrying in %.1fs", reconnect_sleep
+                    )
                     time.sleep(reconnect_sleep)
                     reconnect_sleep = min(max_reconnect_sleep_s, reconnect_sleep * 1.5)
                     continue
@@ -103,6 +230,7 @@ def stream_capture_loop(
 
             ok, frame = cap.read()
             if not ok or frame is None:
+                log.warning("Read failed. Reconnecting in %.1fs", reconnect_sleep)
                 try:
                     cap.release()
                 except Exception:
@@ -131,7 +259,10 @@ def stream_capture_loop(
                 log.warning("Publisher queue full; dropping frame")
 
             next_emit = time.monotonic() + interval_s
-        except Exception:
+        except Exception as e:
+            log.exception(
+                "Unhandled error (%s). Reconnecting in %.1fs", e, reconnect_sleep
+            )
             try:
                 if cap is not None:
                     cap.release()
@@ -147,6 +278,11 @@ def stream_capture_loop(
     except Exception:
         pass
     log.info("Stopped")
+
+
+# ---------------------------------------------------------------------------
+# Publisher loop
+# ---------------------------------------------------------------------------
 
 
 def publisher_loop(
@@ -165,6 +301,13 @@ def publisher_loop(
                 continue
 
             if dry_run:
+                log.info(
+                    "DRY_RUN publish stream_id=%s location=%s ts=%s bytes(image_data)=%s",
+                    payload.get("stream_id"),
+                    payload.get("location"),
+                    payload.get("timestamp"),
+                    len(payload.get("image_data", "")),
+                )
                 continue
 
             publisher.publish_json(payload)
@@ -182,17 +325,55 @@ def publisher_loop(
         publisher.close()
     except Exception:
         pass
+    log.info("Stopped")
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
 
 
 def make_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Stream processor")
-    p.add_argument("--streams", default=os.environ.get("STREAMS_FILE", "streams.json"))
+
+    src = p.add_mutually_exclusive_group()
+    src.add_argument(
+        "--streams",
+        default=os.environ.get("STREAMS_FILE", ""),
+        help="Path to streams JSON file. If set, DB args are ignored.",
+    )
+
+    p.add_argument("--db-host", default=os.environ.get("DB_HOST", "localhost"))
     p.add_argument(
-        "--interval", type=float, default=float(os.environ.get("FRAME_INTERVAL_S", "1"))
+        "--db-port", type=int, default=int(os.environ.get("DB_PORT", "5432"))
+    )
+    p.add_argument("--db-name", default=os.environ.get("DB_NAME", "postgres"))
+    p.add_argument("--db-user", default=os.environ.get("DB_USER", "postgres"))
+    p.add_argument("--db-password", default=os.environ.get("DB_PASSWORD", ""))
+    p.add_argument(
+        "--use-localhost",
+        action="store_true",
+        default=os.environ.get("USE_LOCALHOST", "").lower() in ("1", "true", "yes"),
+        help="Replace stream URL hostnames with localhost (for edge deployments).",
     )
     p.add_argument(
-        "--jpeg-quality", type=int, default=int(os.environ.get("JPEG_QUALITY", "80"))
+        "--db-poll-interval",
+        type=float,
+        default=float(os.environ.get("DB_POLL_INTERVAL_S", "60")),
+        help="Seconds between DB polls for new streams (0 = no polling). Only used with DB mode.",
     )
+
+    p.add_argument(
+        "--interval",
+        type=float,
+        default=float(os.environ.get("FRAME_INTERVAL_S", "1")),
+    )
+    p.add_argument(
+        "--jpeg-quality",
+        type=int,
+        default=int(os.environ.get("JPEG_QUALITY", "80")),
+    )
+
     p.add_argument("--queue-name", default=os.environ.get("QUEUE_NAME", "edge_frames"))
     p.add_argument(
         "--rabbitmq-host", default=os.environ.get("RABBITMQ_HOST", "localhost")
@@ -220,19 +401,35 @@ def main() -> int:
         level=getattr(logging, str(args.log_level).upper(), logging.INFO),
         format="%(asctime)s %(levelname)s %(name)s - %(message)s",
     )
+    log = logging.getLogger("main")
 
-    streams = load_streams(args.streams)
+    db_args = {
+        "host": args.db_host,
+        "port": args.db_port,
+        "dbname": args.db_name,
+        "user": args.db_user,
+        "password": args.db_password,
+    }
+
+    # Decide stream source
+    use_db = not args.streams  # fall back to DB when no JSON file is given
+    if use_db:
+        streams = load_streams_from_db(use_localhost=args.use_localhost, **db_args)
+        log.info("Loaded %d streams from database", len(streams))
+    else:
+        streams = load_streams(args.streams)
+        log.info("Loaded %d streams from file %s", len(streams), args.streams)
+
     stop_event = threading.Event()
     out_q: "queue.Queue[Dict[str, Any]]" = queue.Queue(maxsize=200)
 
-    # Initialize the new Publisher class
     publisher = RabbitPublisher(
         host=args.rabbitmq_host,
         port=args.rabbitmq_port,
         username=args.rabbitmq_username,
         password=args.rabbitmq_password,
         queue_name=args.queue_name,
-        aws_mq_uri=args.aws_mq_uri,  # Pass the AWS info
+        aws_mq_uri=args.aws_mq_uri,
     )
 
     pub_thread = threading.Thread(
@@ -242,6 +439,10 @@ def main() -> int:
         args=(publisher, out_q, stop_event, bool(args.dry_run)),
     )
     pub_thread.start()
+
+    # active_streams tracks stream_id → thread so the poll loop can avoid
+    # starting duplicates.
+    active_streams: Dict[str, threading.Thread] = {}
 
     cap_threads: List[threading.Thread] = []
     for cfg in streams:
@@ -253,14 +454,39 @@ def main() -> int:
         )
         t.start()
         cap_threads.append(t)
+        active_streams[cfg.stream_id] = t
+
+    # Start DB poll thread only in DB mode and when polling is enabled
+    poll_thread: Optional[threading.Thread] = None
+    if use_db and args.db_poll_interval > 0:
+        log.info("DB polling enabled every %.0fs", args.db_poll_interval)
+        poll_thread = threading.Thread(
+            target=db_poll_loop,
+            name="db_poll",
+            daemon=True,
+            args=(
+                db_args,
+                args.use_localhost,
+                args.db_poll_interval,
+                active_streams,
+                out_q,
+                float(args.interval),
+                int(args.jpeg_quality),
+                stop_event,
+            ),
+        )
+        poll_thread.start()
 
     try:
         while True:
             time.sleep(1.0)
     except KeyboardInterrupt:
+        log.info("Stopping")
         stop_event.set()
         for t in cap_threads:
             t.join(timeout=2.0)
+        if poll_thread:
+            poll_thread.join(timeout=2.0)
         pub_thread.join(timeout=2.0)
         return 0
 

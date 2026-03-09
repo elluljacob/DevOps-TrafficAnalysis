@@ -16,7 +16,7 @@ if [ -f "venv/bin/python" ]; then
 else
     PYTHON="python3"
 fi
-
+$PYTHON -m pip install --quiet -r requirements.txt
 echo "  pytest (unit tests)..."
 if ! PYTHONPATH="" $PYTHON -m pytest test/test_unit.py test/test_stream_processor.py -v --tb=short -q; then
     echo "pytest: tests failed."

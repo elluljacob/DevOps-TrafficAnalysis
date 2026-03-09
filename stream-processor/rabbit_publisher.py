@@ -1,9 +1,10 @@
+import base64
 import json
 import logging
 import urllib.request
-import pika
-import base64
 from typing import Any, Dict, Optional
+
+import pika
 
 
 class RabbitPublisher:

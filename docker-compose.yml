@@ -29,11 +29,18 @@ services:
       - FRAME_INTERVAL_S=1.0
       - JPEG_QUALITY=95
       - LOG_LEVEL=INFO
-      - STREAMS_FILE=/app/streams.json
+      # - STREAMS_FILE=/app/streams.json
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - USE_LOCALHOST=true
+      - DB_POLL_INTERVAL_S=60
       - AWS_MQ_URI=amqp://${AWS_MQ_USERNAME}:${AWS_MQ_PASSWORD}@16.171.53.75:5672
       - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp|stimeout;5000000
-    volumes:
-      - ./stream-processor/streams.json:/app/streams.json:ro
+    # volumes:
+    #   - ./stream-processor/streams.json:/app/streams.json:ro
 
 
   yolox-service:

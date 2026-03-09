@@ -106,7 +106,7 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
      * Poll every 30 seconds
      * ------------------------------------------------------------------- */
     useEffect(() => {
-
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchStreams()
 
         const interval = setInterval(fetchStreams, 5000) // 30 seconds
