@@ -143,7 +143,7 @@ function useHandlers() {
     /* -------------------------------------------------------------------
      * API: Submission Handler (Add/Update)
      * ------------------------------------------------------------------- */
-    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
         if (!password) return alert("Password required")
@@ -154,18 +154,24 @@ function useHandlers() {
             const res = await fetch('/api/admin', {
                 method: isEditing ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, password })
+                // Ensure password is included in the body
+                body: JSON.stringify({ ...formData, password }) 
             })
 
+            const result = await res.json()
+
             if (!res.ok) {
-                const err = await res.json()
-                throw new Error(err.error || "Action failed")
+                throw new Error(result.error || "Action failed")
             }
 
-            await refresh() // <- force global list update
+            // ONLY reset if the server confirmed success
+            await refresh() 
             resetForm()
+            alert(isEditing ? "Updated successfully!" : "Added successfully!")
+            
         } catch (err: any) {
             console.error("Submit error:", err)
+            // Form stays filled so user can fix the error (e.g., wrong password)
             alert(err.message || "Network error")
         }
     }

@@ -125,10 +125,12 @@ export function StreamForm(options: FormOptions) {
                 />
 
                 <InputField
-                    label   ="Admin Password"       name    ="password"
-                    type    ="password"             value={options.password}
-
+                    label   ="Admin Password"
+                    name    ="password" // Crucial for identifying the field
+                    type    ="password"
+                    value   ={options.password}
                     placeholder="Required for DB changes"
+                    // Pass the value directly to the setPassword handler
                     onChange={(e) => options.onPasswordChange(e.target.value)}
                 />
 
@@ -137,8 +139,10 @@ export function StreamForm(options: FormOptions) {
                     <button 
                         type="submit" 
                         className={am_styles.saveBtn}
+                        /* Remove onClick={options.onSubmit} from here! 
+                        The form's onSubmit handles it. */
                     >
-                        <svg>
+                        <svg className={am_styles.svgIcon}>
                             <use href="/save.svg#icon" />
                         </svg>
                     </button>
