@@ -1,0 +1,134 @@
+#!/bin/bash
+# Pre-push: runs full test suites before every push
+set -e
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+FAILED=0
+
+echo "Running pre-push checks (full test suites)..."
+
+echo ""
+echo "stream-processor"
+cd "$REPO_ROOT/stream-processor"
+
+if [ -f "venv/bin/python" ]; then
+    PYTHON="venv/bin/python"
+else
+    PYTHON="python3"
+fi
+
+echo "  pytest (unit tests)..."
+if ! PYTHONPATH="" $PYTHON -m pytest test/test_unit.py test/test_stream_processor.py -v --tb=short -q; then
+    echo "pytest: tests failed."
+    FAILED=1
+else
+    echo "pytest"
+fi
+
+echo ""
+echo "yolox-service"
+cd "$REPO_ROOT/yolox-service"
+
+if [ -f "venv/bin/python" ]; then
+    PYTHON="venv/bin/python"
+else
+    PYTHON="python3"
+fi
+
+if [ -d "yolox-consumer/test" ]; then
+    echo "  pytest..."
+    if ! PYTHONPATH="" $PYTHON -m pytest yolox-consumer/test/ -v --tb=short -q; then
+        echo "pytest: tests failed."
+        FAILED=1
+    else
+        echo "pytest"
+    fi
+else
+    echo "No tests found, skipping."
+fi
+
+echo ""
+echo "dashboard"
+cd "$REPO_ROOT/dashboard"
+
+if [ ! -d "node_modules" ]; then
+    echo "node_modules not found, running npm install..."
+    npm install --silent
+fi
+
+echo "  jest..."
+if ! npx jest --passWithNoTests --silent; then
+    echo "jest: tests failed."
+    FAILED=1
+else
+    echo "jest"
+fi
+
+echo ""
+echo "stream-processor"
+cd "$REPO_ROOT/stream-processor"
+
+if [ -f "venv/bin/python" ]; then
+    PYTHON="venv/bin/python"
+else
+    PYTHON="python3"
+fi
+
+echo "  pip-audit..."
+if ! $PYTHON -m pip install --quiet pip-audit && $PYTHON -m pip-audit -r requirements.txt; then
+    echo "pip-audit: vulnerable dependencies found."
+    FAILED=1
+else
+    echo "pip-audit"
+fi
+
+echo ""
+echo "yolox-service"
+cd "$REPO_ROOT/yolox-service"
+
+if [ -f "venv/bin/python" ]; then
+    PYTHON="venv/bin/python"
+else
+    PYTHON="python3"
+fi
+
+echo "  pip-audit..."
+if ! $PYTHON -m pip install --quiet pip-audit && $PYTHON -m pip-audit -r requirements.txt; then
+    echo "pip-audit: vulnerable dependencies found."
+    FAILED=1
+else
+    echo "pip-audit"
+fi
+
+echo ""
+echo "dashboard"
+cd "$REPO_ROOT/dashboard"
+
+echo "  npm audit..."
+if ! npm audit --audit-level=critical --silent; then
+    echo "npm audit: critical vulnerabilities found."
+    FAILED=1
+else
+    echo "npm audit"
+fi
+
+echo ""
+echo "filesystem scan"
+cd "$REPO_ROOT"
+
+echo "  trivy..."
+if ! trivy fs . --severity HIGH,CRITICAL --quiet --exit-code 1 --skip-files ".env,edge_key"; then
+    echo "trivy: HIGH/CRITICAL vulnerabilities found."
+    FAILED=1
+else
+    echo "trivy"
+fi
+
+echo ""
+if [ $FAILED -ne 0 ]; then
+    echo "Pre-push failed. Fix the failing tests before pushing."
+    exit 1
+fi
+
+echo "All pre-push checks passed."
+exit 0
