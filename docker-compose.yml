@@ -26,11 +26,14 @@ services:
       - FRAME_INTERVAL_S=0.2
       - JPEG_QUALITY=80
       - LOG_LEVEL=INFO
-      - STREAMS_FILE=/app/streams.json
+      - DB_HOST=traffic-statitistics.c3oik8sw8sm7.eu-north-1.rds.amazonaws.com
+      - DB_PORT=5432
+      - DB_NAME=postgres
+      - DB_USER=yolox_writer
+      - DB_PASSWORD=devops-group4-#keithisfat01
+      - USE_LOCALHOST=true
       # Make RTSP ingest more robust (avoid UDP packet loss artifacts)
       - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp|stimeout;5000000
-    volumes:
-      - ./stream-processor/streams.json:/app/streams.json:ro
 
 
   yolox-service:

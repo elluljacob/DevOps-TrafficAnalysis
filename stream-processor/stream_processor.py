@@ -9,9 +9,11 @@ import os
 import queue
 import threading
 import time
+import urllib.parse
 from typing import Any, Dict, List, Optional
 
 import cv2
+import psycopg2
 import pika
 
 
@@ -26,21 +28,42 @@ def utc_iso_now() -> str:
     return dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
-def load_streams(path: str) -> List[StreamConfig]:
-    with open(path, "r", encoding="utf-8") as f:
-        raw = json.load(f)
+def replace_host_with_localhost(url: str) -> str:
+    parsed = urllib.parse.urlparse(url)
+    replaced = parsed._replace(netloc=parsed.netloc.replace(parsed.hostname, "localhost", 1))
+    return urllib.parse.urlunparse(replaced)
 
-    if not isinstance(raw, list):
-        raise ValueError("Streams config must be a JSON array")
+
+def load_streams_from_db(
+    host: str,
+    port: int,
+    dbname: str,
+    user: str,
+    password: str,
+    use_localhost: bool = False,
+) -> List[StreamConfig]:
+    log = logging.getLogger("load_streams")
+    conn = psycopg2.connect(host=host, port=port, dbname=dbname, user=user, password=password, connect_timeout=10)
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT stream_id, location, url FROM streams")
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        raise ValueError("No streams found in the database")
 
     streams: List[StreamConfig] = []
-    for i, item in enumerate(raw):
-        if not isinstance(item, dict):
-            raise ValueError(f"Stream entry #{i} must be an object")
-        for key in ("stream_id", "location", "url"):
-            if key not in item or not item[key]:
-                raise ValueError(f"Stream entry #{i} missing '{key}'")
-        streams.append(StreamConfig(stream_id=str(item["stream_id"]), location=str(item["location"]), url=str(item["url"])))
+    for stream_id, location, url in rows:
+        if not stream_id or not location or not url:
+            log.warning("Skipping incomplete stream row: id=%s location=%s url=%s", stream_id, location, url)
+            continue
+        if use_localhost:
+            url = replace_host_with_localhost(url)
+        streams.append(StreamConfig(stream_id=str(stream_id), location=str(location), url=str(url)))
+        log.info("Loaded stream id=%s location=%s url=%s", stream_id, location, url)
+
     return streams
 
 
@@ -243,7 +266,16 @@ def publisher_loop(
 
 def make_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Stream processor: sample frames and push to RabbitMQ.")
-    p.add_argument("--streams", default=os.environ.get("STREAMS_FILE", "streams.json"), help="Path to streams JSON file.")
+    # PostgreSQL
+    p.add_argument("--db-host", default=os.environ.get("DB_HOST", "localhost"), help="PostgreSQL host.")
+    p.add_argument("--db-port", type=int, default=int(os.environ.get("DB_PORT", "5432")), help="PostgreSQL port.")
+    p.add_argument("--db-name", default=os.environ.get("DB_NAME", "postgres"), help="PostgreSQL database name.")
+    p.add_argument("--db-user", default=os.environ.get("DB_USER", "postgres"), help="PostgreSQL user.")
+    p.add_argument("--db-password", default=os.environ.get("DB_PASSWORD", ""), help="PostgreSQL password.")
+    p.add_argument("--use-localhost", action="store_true",
+                   default=os.environ.get("USE_LOCALHOST", "").lower() in ("1", "true", "yes"),
+                   help="Replace stream URL hostnames with localhost (for edge deployments).")
+    # RabbitMQ
     p.add_argument("--interval", type=float, default=float(os.environ.get("FRAME_INTERVAL_S", "0.2")), help="Seconds between pushed frames per stream.")
     p.add_argument("--jpeg-quality", type=int, default=int(os.environ.get("JPEG_QUALITY", "80")), help="JPEG quality (1-100).")
     p.add_argument("--queue-name", default=os.environ.get("QUEUE_NAME", "edge_frames"))
@@ -263,8 +295,15 @@ def main() -> int:
         format="%(asctime)s %(levelname)s %(name)s - %(message)s",
     )
 
-    streams = load_streams(args.streams)
-    logging.getLogger("main").info("Loaded %d streams from %s", len(streams), args.streams)
+    streams = load_streams_from_db(
+        host=args.db_host,
+        port=args.db_port,
+        dbname=args.db_name,
+        user=args.db_user,
+        password=args.db_password,
+        use_localhost=args.use_localhost,
+    )
+    logging.getLogger("main").info("Loaded %d streams from database", len(streams))
 
     stop_event = threading.Event()
     out_q: "queue.Queue[Dict[str, Any]]" = queue.Queue(maxsize=200)
