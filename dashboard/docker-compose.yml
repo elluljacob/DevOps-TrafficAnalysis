@@ -3,17 +3,15 @@ services:
     container_name: dashboard-container
     build:
       context: .
-      # We can target the 'deps' stage for dev or just run the whole thing
+      target: deps
     ports:
       - "3000:3000"
     env_file:
-      - .env  # This automatically pulls all variables from your .env file
+      - .env
     environment:
       - NODE_ENV=development
-      - LOG_TO_FILE=false
     volumes:
-      - .:/app           # Maps your code so changes reflect instantly
-      - /app/node_modules # Anonymous volume: prevents local node_modules from overwriting container ones
-      - /app/.next       # Prevents local build cache from clashing
-    # Overriding the CMD for development so you get Hot Module Replacement (HMR)
+      - .:/app
+      - /app/node_modules/
+      - /app/.next/
     command: npm run dev
