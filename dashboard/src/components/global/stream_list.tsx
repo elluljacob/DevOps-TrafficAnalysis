@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { StreamObject } from '@/types/stream'
 import { log, LogLevel } from '@/lib/logger'
 
@@ -70,8 +70,7 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
     /* -------------------------------------------------------------------
      *  Fetch streams from API
      * ------------------------------ ------------------------------------- */
-    const fetchStreams = async () => {
-
+    const fetchStreams = useCallback(async () => {
         try {
             const res = await fetch('/api/get_streams')
             if (!res.ok) return
@@ -79,28 +78,20 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
             const incoming: StreamObject[] = await res.json()
 
             setStreams(prev => {
-
                 const updated: Record<string, StreamUI> = {}
-
                 for (const stream of incoming) {
-
                     const existing = prev[stream.ID]
-
                     updated[stream.ID] = {
-                        ID      : stream.ID,    loc: stream.loc,
-                        url     : stream.url,   lat: stream.lat,
-                        long    : stream.long,
+                        ...stream, // Cleaner spread
                         selected: existing ? existing.selected : false
                     }
                 }
-
                 return updated
             })
-
         } catch (err) {
             console.error("Stream fetch failed", err)
         }
-    }
+    }, []) // Empty deps mean this function identity is stable
 
     /* -------------------------------------------------------------------
      * Poll every 30 seconds
@@ -109,10 +100,10 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchStreams()
 
-        const interval = setInterval(fetchStreams, 5000) // 30 seconds
-        return () => clearInterval(interval)
-
-    }, [])
+        const interval = setInterval(fetchStreams, 5000)
+        
+        return () => clearInterval(interval);
+    }, [fetchStreams])
 
     return (
         <StreamContext.Provider
