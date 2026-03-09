@@ -35,6 +35,8 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      # - SAVE_FRAMES_ONLY=true
+      # - OUTPUT_DIR=/app/frames
       - USE_LOCALHOST=true
       - DB_POLL_INTERVAL_S=60
       - AWS_MQ_URI=amqp://${AWS_MQ_USERNAME}:${AWS_MQ_PASSWORD}@16.171.53.75:5672

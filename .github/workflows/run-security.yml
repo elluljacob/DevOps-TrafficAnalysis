@@ -37,6 +37,7 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_UPLOAD_ARTIFACT: false
 
       # Dependency scan: Node
       - name: Set up Node.js

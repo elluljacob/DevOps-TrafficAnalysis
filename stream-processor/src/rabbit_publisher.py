@@ -105,7 +105,7 @@ class RabbitPublisher:
             self.log.info("✅ Successfully configured Shovel to AWS MQ.")
         except Exception as e:
             self.log.error(
-                f"⚠️ Failed to configure Shovel to AWS. Is the management plugin enabled? Error: {e}"
+                f"Failed to configure Shovel to AWS. Is the management plugin enabled? Error: {e}"
             )
 
     def close(self) -> None:

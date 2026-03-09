@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from stream_processor import StreamConfig, stream_capture_loop
+from streams import StreamConfig
+from capture import stream_capture_loop
 
 
 def make_cfg(stream_id="cam1"):
