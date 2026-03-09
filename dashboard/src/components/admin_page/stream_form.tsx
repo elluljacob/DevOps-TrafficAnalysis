@@ -137,7 +137,6 @@ export function StreamForm(options: FormOptions) {
                     <button 
                         type="submit" 
                         className={am_styles.saveBtn}
-                        onClick={options.onCancel}
                     >
                         <svg>
                             <use href="/save.svg#icon" />
