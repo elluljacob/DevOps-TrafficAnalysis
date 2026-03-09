@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from stream_processor import StreamConfig, stream_capture_loop
+from streams import StreamConfig
+from capture import stream_capture_loop
 
 
 def make_cfg(stream_id="cam1"):
@@ -43,7 +44,7 @@ def run_capture_loop(mock_cap, interval_s=1.0, duration=3.0, queue_size=100):
     stop = threading.Event()
     cfg = make_cfg()
 
-    with patch("stream_processor.cv2.VideoCapture", return_value=mock_cap):
+    with patch("capture.cv2.VideoCapture", return_value=mock_cap):
         t = threading.Thread(
             target=stream_capture_loop,
             args=(cfg, interval_s, 80, out_q, stop),
@@ -97,7 +98,7 @@ class TestStreamCaptureLoop:
         stop = threading.Event()
         cap = make_mock_cap()
 
-        with patch("stream_processor.cv2.VideoCapture", return_value=cap):
+        with patch("capture.cv2.VideoCapture", return_value=cap):
             t = threading.Thread(
                 target=stream_capture_loop,
                 args=(make_cfg(), 1.0, 80, out_q, stop),
@@ -123,7 +124,7 @@ class TestStreamCaptureLoop:
         out_q = queue.Queue(maxsize=100)
         stop = threading.Event()
 
-        with patch("stream_processor.cv2.VideoCapture", side_effect=fake_video_capture):
+        with patch("capture.cv2.VideoCapture", side_effect=fake_video_capture):
             t = threading.Thread(
                 target=stream_capture_loop,
                 args=(make_cfg(), 0.1, 80, out_q, stop),

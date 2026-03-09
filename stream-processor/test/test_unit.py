@@ -6,7 +6,9 @@ import cv2
 import numpy as np
 import pytest
 
-from stream_processor import StreamConfig, encode_frame_jpeg_base64, load_streams
+from streams import StreamConfig
+from capture import encode_frame_jpeg_base64
+from streams import load_streams
 
 
 # helpers

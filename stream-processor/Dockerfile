@@ -11,8 +11,12 @@ RUN apt-get update \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY stream_processor.py ./stream_processor.py
-COPY rabbit_publisher.py ./rabbit_publisher.py
+COPY src/stream_processor.py ./stream_processor.py
+COPY src/rabbit_publisher.py ./rabbit_publisher.py
+COPY src/capture.py           ./capture.py
+COPY src/streams.py           ./streams.py
+COPY src/sinks.py             ./sinks.py
+COPY src/utils.py             ./utils.py
 
 CMD ["python", "/app/stream_processor.py", "--streams", "/app/streams.json"]
 
