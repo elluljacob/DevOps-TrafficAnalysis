@@ -18,5 +18,5 @@ COPY src/streams.py           ./streams.py
 COPY src/sinks.py             ./sinks.py
 COPY src/utils.py             ./utils.py
 
-CMD ["python", "/app/stream_processor.py", "--streams", "/app/streams.json"]
+CMD ["python", "/app/stream_processor.py"]
 
