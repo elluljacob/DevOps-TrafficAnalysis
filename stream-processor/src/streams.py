@@ -42,7 +42,7 @@ def replace_host_with_localhost(url: str) -> str:
     if not parsed.hostname:
         return url
     replaced = parsed._replace(
-        netloc=parsed.netloc.replace(parsed.hostname, "host.docker.internal", 1)
+        netloc=parsed.netloc.replace(parsed.hostname, "localhost", 1)
     )
     return urllib.parse.urlunparse(replaced)
 
