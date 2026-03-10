@@ -3,6 +3,13 @@ import psycopg2
 from datetime import datetime, timezone
 from loguru import logger
 
+CLASS_MAPPING = {
+    "bicycle": "bike",
+    "bus": "bus",
+    "car": "car",
+    "truck": "truck",
+    "person": "person",
+}
 
 class PostgresWriter:
     def __init__(self):
@@ -32,15 +39,22 @@ class PostgresWriter:
         Writes YOLOX inference results to Postgres.
         'result' expects: {'total_count': X, 'per_class': {'class': count}}
         """
-        counts = result.get("per_class", {})
+        counts_raw = result.get("per_class", {})
+
+        counts = {}
+        for cls, value in counts_raw.items():
+            mapped = CLASS_MAPPING.get(cls)
+            if mapped:
+                counts[mapped] = counts.get(mapped, 0) + value
 
         sql = """
         INSERT INTO traffic_metrics (
             id, datetime, location, total_count,
             person_count, car_count, truck_count,
+            bus_count, bike_count,
             detected_classes, status
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
         if timestamp is None:
@@ -57,6 +71,8 @@ class PostgresWriter:
             counts.get("person", 0),
             counts.get("car", 0),
             counts.get("truck", 0),
+            counts.get("bus", 0),
+            counts.get("bike", 0),
             list(counts.keys()),
             "active_inference",
         )
