@@ -1,6 +1,7 @@
 import os
-import psycopg2
 from datetime import datetime, timezone
+
+import psycopg2
 from loguru import logger
 
 CLASS_MAPPING = {
@@ -10,6 +11,7 @@ CLASS_MAPPING = {
     "truck": "truck",
     "person": "person",
 }
+
 
 class PostgresWriter:
     def __init__(self):

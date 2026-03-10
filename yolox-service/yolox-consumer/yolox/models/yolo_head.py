@@ -3,13 +3,14 @@
 # Copyright (c) Megvii Inc. All rights reserved.
 
 import math
-from loguru import logger
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from loguru import logger
 
 from yolox.utils import bboxes_iou, cxcywh2xyxy, meshgrid
+
 from .network_blocks import BaseConv, DWConv
 
 

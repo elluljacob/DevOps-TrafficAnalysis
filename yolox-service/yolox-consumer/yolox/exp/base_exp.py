@@ -5,9 +5,9 @@ import ast
 import pprint
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List, Tuple
-from tabulate import tabulate
 
 import torch
+from tabulate import tabulate
 from torch.nn import Module
 
 

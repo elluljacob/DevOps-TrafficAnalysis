@@ -1,17 +1,17 @@
-import os
-import json
-import time
 import base64
-from collections import Counter
-from database import PostgresWriter
-
+import json
+import os
 import ssl
-import pika
+import time
+from collections import Counter
+
 import cv2
 import numpy as np
+import pika
 import torch
 from loguru import logger
 
+from database import PostgresWriter
 from yolox.data.data_augment import ValTransform
 from yolox.data.datasets import COCO_CLASSES
 from yolox.exp import get_exp

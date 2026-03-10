@@ -31,7 +31,7 @@ class Exp(MyExp):
                     m.momentum = 0.03
 
         if "model" not in self.__dict__:
-            from yolox.models import YOLOX, YOLOPAFPN, YOLOXHead
+            from yolox.models import YOLOPAFPN, YOLOX, YOLOXHead
 
             in_channels = [256, 512, 1024]
             # NANO model use depthwise = True, which is main difference.

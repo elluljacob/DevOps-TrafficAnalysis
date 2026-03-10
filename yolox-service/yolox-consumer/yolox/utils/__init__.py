@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 # Copyright (c) Megvii Inc. All rights reserved.
 
+import torch
+
 # Trimmed for inference-only usage
 from .boxes import *
 from .model_utils import *
 from .visualize import *
-
-
-import torch
 
 _TORCH_VER = [int(x) for x in torch.__version__.split(".")[:2]]
 
