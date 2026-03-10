@@ -1,8 +1,7 @@
 'use client'
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { StreamObject } from '@/types/stream'
-import { log, LogLevel } from '@/lib/logger'
 
 /* ============================================================================
  * Stream UI Type
@@ -34,8 +33,8 @@ const StreamContext = createContext<StreamContextType | null>(null)
  */
 export function StreamProvider({ children }: { children: React.ReactNode }) {
     const [streams, setStreams] = useState<Record<string, StreamUI>>({});
-    // Track if we have performed the initial "Select Top 3" logic
-    const [isFirstLoad, setIsFirstLoad] = useState(true);
+    // Use a Ref instead of State to track first load without triggering re-renders
+    const isFirstLoad = useRef(true);
 
     /* -------------------------------------------------------------------
      * Toggle selected state
@@ -59,51 +58,45 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
         try {
             const res = await fetch('/api/get_streams');
             if (!res.ok) return;
-
             const incoming: StreamObject[] = await res.json();
 
             setStreams(prev => {
                 const updated: Record<string, StreamUI> = {};
-
                 incoming.forEach((stream, index) => {
                     const existing = prev[stream.ID];
+                    // Use .current for the ref check
+                    const shouldBeSelected = existing ? existing.selected : (isFirstLoad.current && index < 3);
                     
-                    let shouldBeSelected = false;
-
-                    if (existing) {
-                        // 1. If we already know this stream, keep its current state
-                        shouldBeSelected = existing.selected;
-                    } else if (isFirstLoad && index < 3) {
-                        // 2. If it's a new stream AND it's the first load AND it's top 3
-                        shouldBeSelected = true;
-                    } else {
-                        // 3. Otherwise (new stream appearing later), default to false
-                        shouldBeSelected = false;
-                    }
-
-                    updated[stream.ID] = {
-                        ...stream,
-                        selected: shouldBeSelected
-                    };
+                    updated[stream.ID] = { ...stream, selected: shouldBeSelected };
                 });
-
                 return updated;
             });
 
-            // Flip the switch after the first successful processing
-            if (isFirstLoad && incoming.length > 0) {
-                setIsFirstLoad(false);
+            // Update ref without triggering a re-render
+            if (incoming.length > 0) {
+                isFirstLoad.current = false;
             }
-
         } catch (err) {
             console.error("Stream fetch failed", err);
         }
-    }, [isFirstLoad]); // Hook depends on isFirstLoad to know when to stop defaulting
+    }, []); // No dependencies needed now!
 
     useEffect(() => {
-        fetchStreams();
-        const interval = setInterval(fetchStreams, 5000);
-        return () => clearInterval(interval);
+        // Define a flag to prevent state updates if the component unmounts
+        let isMounted = true;
+
+        const tick = async () => {
+            await fetchStreams();
+        };
+
+        tick(); // Initial fetch
+
+        const interval = setInterval(tick, 5000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
     }, [fetchStreams]);
 
     return (

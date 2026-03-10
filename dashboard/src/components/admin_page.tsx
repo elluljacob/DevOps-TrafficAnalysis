@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import am_styles from '@/styles/admin.module.css'
 import cd_styles from '@/styles/common_dashboard.module.css'
 import { StreamObject } from '@/types/stream';
-import { StreamProvider, useStreams} from '@/components/global/stream_list';
+import { useStreams} from '@/components/global/stream_list';
 import { StreamForm } from '@/components/admin_page/stream_form';
 import { StreamTable } from '@/components/admin_page/stream_table';
 import { PasswordModal } from './admin_page/password_popup';

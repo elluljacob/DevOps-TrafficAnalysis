@@ -2,9 +2,8 @@ import { NextResponse, NextRequest } from 'next/server'
 import { PieChartResult } from '@/types/stats'
 import { aggregateCameraData } from '@/app/api/stats/testing_db'
 
-export async function GET(request: NextRequest) {
+export async function GET(_: NextRequest) {
     try {
-        const searchParams = request.nextUrl.searchParams;
 
         // Get averaged counts per camera
         const cameraData = await aggregateCameraData();

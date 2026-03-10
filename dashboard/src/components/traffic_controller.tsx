@@ -1,6 +1,5 @@
 'use client'
 
-import { TimeRange }    from '@/types/stats'
 import tc_styles        from '@/styles/traffic_controls.module.css'
 import cd_styles        from '@/styles/common_dashboard.module.css'
 import dynamic from "next/dynamic";
@@ -95,8 +94,6 @@ export default function TrafficControls() {
 
             <div className={tc_styles.mapFilter}>
                 <Map
-                    cameras={cameras}
-                    toggleCamera={toggleCamera}
                     zoom={13}
                 />
             </div>
