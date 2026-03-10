@@ -33,77 +33,78 @@ const StreamContext = createContext<StreamContextType | null>(null)
  * ============================================================================ 
  */
 export function StreamProvider({ children }: { children: React.ReactNode }) {
-
-    const [streams, setStreams] = useState<Record<string, StreamUI>>({})
+    const [streams, setStreams] = useState<Record<string, StreamUI>>({});
+    // Track if we have performed the initial "Select Top 3" logic
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
 
     /* -------------------------------------------------------------------
      * Toggle selected state
      * ------------------------------------------------------------------- */
     const toggleStream = (id: string) => {
-
         setStreams(prev => {
+            const stream = prev[id];
+            if (!stream) return prev;
 
-            const stream = prev[id]
-            if (!stream) return prev
-
-            const updated: Record<string, StreamUI> = {}
-
-            for (const key in prev) {
-
-                const s = prev[key]
-
-                if (key === id) {
-                    updated[key] = {
-                        ID      : s.ID,     loc     : s.loc,
-                        url     : s.url,    lat     : s.lat,
-                        long    : s.long,   selected: !s.selected
-                    }
-                } else {
-                    updated[key] = s
-                }
-            }
-
-            return updated
-        })
-    }
+            return {
+                ...prev,
+                [id]: { ...stream, selected: !stream.selected }
+            };
+        });
+    };
 
     /* -------------------------------------------------------------------
-     *  Fetch streams from API
-     * ------------------------------ ------------------------------------- */
+     * Fetch streams from API
+     * ------------------------------------------------------------------- */
     const fetchStreams = useCallback(async () => {
         try {
-            const res = await fetch('/api/get_streams')
-            if (!res.ok) return
+            const res = await fetch('/api/get_streams');
+            if (!res.ok) return;
 
-            const incoming: StreamObject[] = await res.json()
+            const incoming: StreamObject[] = await res.json();
 
             setStreams(prev => {
-                const updated: Record<string, StreamUI> = {}
-                for (const stream of incoming) {
-                    const existing = prev[stream.ID]
-                    updated[stream.ID] = {
-                        ...stream, // Cleaner spread
-                        selected: existing ? existing.selected : false
+                const updated: Record<string, StreamUI> = {};
+
+                incoming.forEach((stream, index) => {
+                    const existing = prev[stream.ID];
+                    
+                    let shouldBeSelected = false;
+
+                    if (existing) {
+                        // 1. If we already know this stream, keep its current state
+                        shouldBeSelected = existing.selected;
+                    } else if (isFirstLoad && index < 3) {
+                        // 2. If it's a new stream AND it's the first load AND it's top 3
+                        shouldBeSelected = true;
+                    } else {
+                        // 3. Otherwise (new stream appearing later), default to false
+                        shouldBeSelected = false;
                     }
-                }
-                return updated
-            })
+
+                    updated[stream.ID] = {
+                        ...stream,
+                        selected: shouldBeSelected
+                    };
+                });
+
+                return updated;
+            });
+
+            // Flip the switch after the first successful processing
+            if (isFirstLoad && incoming.length > 0) {
+                setIsFirstLoad(false);
+            }
+
         } catch (err) {
-            console.error("Stream fetch failed", err)
+            console.error("Stream fetch failed", err);
         }
-    }, []) // Empty deps mean this function identity is stable
+    }, [isFirstLoad]); // Hook depends on isFirstLoad to know when to stop defaulting
 
-    /* -------------------------------------------------------------------
-     * Poll every 30 seconds
-     * ------------------------------------------------------------------- */
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        fetchStreams()
-
-        const interval = setInterval(fetchStreams, 5000)
-        
+        fetchStreams();
+        const interval = setInterval(fetchStreams, 5000);
         return () => clearInterval(interval);
-    }, [fetchStreams])
+    }, [fetchStreams]);
 
     return (
         <StreamContext.Provider
@@ -115,9 +116,8 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
         >
             {children}
         </StreamContext.Provider>
-    )
+    );
 }
-
 /* ============================================================================
  * Hook
  * ============================================================================ 

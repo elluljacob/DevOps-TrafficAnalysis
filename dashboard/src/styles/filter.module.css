@@ -1,3 +1,8 @@
+
+
+
+
+
 /* ============================================================================
  *  Arrow Inside Select
  * ============================================================================ */
@@ -77,4 +82,17 @@
     /* Optional: Ensure content doesn't break the square */
     overflow: hidden; 
     border-radius: 1rem;
+}
+
+
+.locationIconRed {
+  width: 30px;
+  height: 30px;
+  color: #b91c1c;
+}
+
+.locationIconGreen {
+  width: 30px;
+  height: 30px;
+  color: #059669;
 }

@@ -40,6 +40,8 @@
     border-radius: 6px;
     color: #fff;
     outline: none;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .inputField:focus {
@@ -101,12 +103,16 @@
     display: flex;
     flex-direction: row;
     gap: 1rem;
+    width: 100%;        /* Take up the full width of the form */
+}
+.coordRow > div {
+    flex: 1;            /* This forces both InputFields to be equal width (50/50) */
 }
 .cancelBtn {
-    flex: 2;
+    flex: 0.5;
     padding: 1rem;
     /* Darker, less saturated green */
-    background: #3e6b40; 
+    background: #7d3c3c;; 
     color: white;
     border: none;
     border-radius: 6px;
@@ -123,7 +129,7 @@
 
 
 .cancelBtn:hover {
-    background: #345a36; /* Slightly darker on hover */
+    background: #6b3333; /* Slightly darker on hover */
 }
 .cancelBtn svg {
     /* Ensures the SVG doesn't intercept the click event */
@@ -133,34 +139,68 @@
     color: #ffffff;
     opacity: 1;
 }
-.tableSection {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+.tableHeaderArea {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    gap: 1rem;
 }
 
-.tableScroll {
-    flex: 1; /* fill available vertical space */
-    overflow-y: auto;
+/* Search Bar Styling */
+.tableSearch {
+    background: #1c1c1f;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    outline: none;
+    width: 250px;
+    transition: border-color 0.2s;
 }
 
+.tableSearch:focus {
+    border-color: #007bff;
+}
+
+/* Table Centering & Transparency */
 .cameraTable {
     width: 100%;
     border-collapse: collapse;
-    background: #1e1e1e;
-    border-radius: 8px;
+    background: transparent;
+    /* This is the magic line that stops columns from jumping */
+    table-layout: fixed; 
 }
 
 .cameraTable th {
-    background: #2c2c2c;
+    background: transparent; /* Removed header background */
     padding: 15px;
     text-align: left;
     color: #888;
+    border-bottom: 2px solid #333; /* Stronger separation for header */
+}
+
+/* Center specific columns */
+.centeredCol {
+    text-align: center !important;
 }
 
 .cameraTable td {
     padding: 15px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid #333; /* Only separation lines */
+    color: #eee;
+}
+
+/* Checkbox alignment */
+.checkbox {
+    cursor: pointer;
+    transform: scale(1.1);
+}
+
+/* Align titles in headers to center if the column is centered */
+.cameraTable th.centeredCol {
+    text-align: center;
 }
 .editLink {
     color: #4dabf7;
@@ -175,4 +215,99 @@
     background: none;
     border: none;
     cursor: pointer;
+}
+
+
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.modalContent {
+    background: #0d0d0d; /* Deep black */
+    border: 1px solid #333;
+    width: 450px;
+    border-radius: 6px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    animation: swooshUp 0.25s ease-out;
+}
+
+.terminalHeader {
+    background: #1a1a1a;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #222;
+}
+
+.terminalTitle {
+    color: #666;
+    font-size: 0.7rem;
+    font-family: monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* The blended X button */
+.closeX {
+    background: transparent;
+    border: none;
+    color: #444;
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.closeX:hover {
+    color: #999;
+}
+
+.terminalBody {
+    padding: 20px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.sshInputLine {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.prompt {
+    color: #bbb;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.sshInput {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #00ff41; /* Matrix/Terminal Green */
+    font-family: inherit;
+    font-size: 1rem;
+    width: 100%;
+    caret-color: #00ff41;
+}
+
+.modalHint {
+    color: #444;
+    font-size: 0.7rem;
+    text-align: right;
+    margin: 0;
+}
+
+@keyframes swooshUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }

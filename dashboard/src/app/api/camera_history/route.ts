@@ -49,8 +49,8 @@ export async function GET(req: NextRequest) {
             AVG(tm.car_count)    AS "Cars",
             AVG(tm.truck_count)  AS "Trucks",
             AVG(tm.person_count) AS "Pedestrians",
-            0 AS "Bikes",
-            0 AS "Buses"
+            AVG(tm.bike_count) AS "Bikes",
+            AVG(tm.bus_count) AS "Buses"
         FROM traffic_metrics tm
         CROSS JOIN latest
         WHERE tm.id = $1

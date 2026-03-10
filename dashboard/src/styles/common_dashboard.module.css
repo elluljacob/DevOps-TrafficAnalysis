@@ -96,3 +96,9 @@
     color: #aeadad;
     padding-bottom: 0.25rem;
 }
+
+.thirdHeaderFormatSmall {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    color: #aeadad;
+}

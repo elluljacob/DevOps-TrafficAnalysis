@@ -45,7 +45,7 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 10%; /* Adjust this to make the "invisible" detection wider or narrower */
+    width: 6rem; /* Adjust this to make the "invisible" detection wider or narrower */
     z-index: 100;
     display: flex;
     align-items: center; /* Vertically center the arrow within the zone */
