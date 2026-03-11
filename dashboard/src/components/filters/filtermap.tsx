@@ -9,7 +9,7 @@ import "leaflet-defaulticon-compatibility";
 import { useStreams, StreamUI, StreamProvider } from "@/components/global/stream_list"; 
 import ft_styles from '@/styles/filter.module.css';
 
-const AMSTERDAM_COORDS: [number, number] = [52.3676, 4.9041];
+const AMSTERDAM_COORDS: [number, number] = [52.3650, 4.9241];
 const createIcon = (color: string) =>
   L.divIcon({
     className: "", // Leaflet wrapper class
@@ -116,7 +116,7 @@ function MapContent({ zoom }: { zoom: number }) {
  * Map Export - The Parent Wrapper providing Context
  * ============================================================================
  */
-export default function Map({ zoom = 13 }: { zoom?: number }) {
+export default function Map({ zoom = 15 }: { zoom?: number }) {
     return (
         <MapContent zoom={zoom} />
     );

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useMemo, useRef, useEffect } from 'react'
-import ft_styles from '@/styles/filter.module.css' // Using your existing styles
+import ft_styles from '@/styles/filter.module.css'
 
 interface Option {
     label: string
@@ -20,26 +20,35 @@ export default function SearchableSelect({
 }) {
     const [isOpen, setIsOpen] = useState(false)
     const [search, setSearch] = useState('')
+    const containerRef = useRef<HTMLDivElement>(null) // Ref for the whole component
     const inputRef = useRef<HTMLInputElement>(null)
 
-    // Filter options based on internal search
+    // Handle clicking outside to close
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
     const filteredOptions = useMemo(() => {
         return options.filter(opt => 
             opt.label.toLowerCase().includes(search.toLowerCase())
         )
     }, [options, search])
 
-    // Find the current label for the button display
     const currentLabel = options.find(o => o.value === value)?.label || placeholder
 
-    // Focus search input when dropdown opens
     useEffect(() => {
         if (isOpen) inputRef.current?.focus()
     }, [isOpen])
 
     return (
-        <div className={ft_styles.dropdownContainer} onMouseLeave={() => setIsOpen(false)}>
-            {/* The Trigger Button */}
+        /* Removed onMouseLeave, added containerRef */
+        <div className={ft_styles.dropdownContainer} ref={containerRef}>
             <button 
                 className={ft_styles.dropdownTrigger} 
                 onClick={() => setIsOpen(!isOpen)}
@@ -49,10 +58,8 @@ export default function SearchableSelect({
                 <span className={ft_styles.chevron}>{isOpen ? '▲' : '▼'}</span>
             </button>
 
-            {/* The Menu */}
             {isOpen && (
                 <div className={ft_styles.dropdownMenu}>
-                    {/* 1. The Search Box (First Element) */}
                     <div className={ft_styles.searchWrapper}>
                         <input
                             ref={inputRef}
@@ -61,11 +68,9 @@ export default function SearchableSelect({
                             className={ft_styles.internalSearch}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            onClick={(e) => e.stopPropagation()} // Prevent closing
                         />
                     </div>
 
-                    {/* 2. The Options List */}
                     <div className={ft_styles.optionsList}>
                         {filteredOptions.length > 0 ? (
                             filteredOptions.map(opt => (
@@ -75,7 +80,7 @@ export default function SearchableSelect({
                                     onClick={() => {
                                         setValue(opt.value)
                                         setIsOpen(false)
-                                        setSearch('') // Reset search on select
+                                        setSearch('')
                                     }}
                                 >
                                     {opt.label}

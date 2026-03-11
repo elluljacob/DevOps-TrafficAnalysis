@@ -22,6 +22,7 @@ export interface LineChartConfig<T = any> {
     height          ?: number | string
     width           ?: number | string
     xAxisFormatter  ?: (value: any) => string
+    xAxisRotate     ?: number 
 }
 
 interface LineChartProps<T> {
@@ -47,7 +48,6 @@ function buildSeries<T>(data: T[], config: LineChartConfig<T>) {
         data: data.map(item => Number(item[key]))
     }));
 }
-
 /* ============================================================================
  * Internal Logic: ECharts Option Builder
  * ----------------------------------------------------------------------------
@@ -60,10 +60,12 @@ function buildChartOption<T>(data: T[], config: LineChartConfig<T>) {
         series,
         colors,
         legendPosition = 'top',
-        xAxisFormatter
+        xAxisFormatter,
+        xAxisRotate = 0
     } = config;
 
-    const option: any = {
+    return {
+        color: colors,
         tooltip: { 
             trigger: 'axis',
             backgroundColor: '#18181b',
@@ -72,16 +74,15 @@ function buildChartOption<T>(data: T[], config: LineChartConfig<T>) {
         },
         legend: {
             show: true,
-            [legendPosition]: 0,
+            [legendPosition]: 10,
             data: series.map(s => String(s)),
             textStyle: { fontFamily: 'Cascadia Mono', color: '#ffffff' }
         },
         grid: { 
-            left: '3%', 
-            right: '4%', 
-            bottom: '3%', 
-            // Adjust top margin if legend is at the top to prevent overlap
-            top: legendPosition === 'top' ? 40 : 10,
+            left: '2%', 
+            right: '2%', 
+            bottom: '2%', // Tightened: containLabel handles the rest
+            top: legendPosition === 'top' ? 70 : 20,
             containLabel: true 
         },
         xAxis: {
@@ -91,21 +92,25 @@ function buildChartOption<T>(data: T[], config: LineChartConfig<T>) {
                 const val = item[xKey];
                 return xAxisFormatter ? xAxisFormatter(val) : String(val);
             }),
-            axisLabel: { color: '#a1a1aa', fontFamily: 'Cascadia Mono' }
+            axisLabel: { 
+                color: '#a1a1aa', 
+                fontFamily: 'Cascadia Mono',
+                rotate: xAxisRotate,
+                interval: 'auto',
+                fontSize: 11,
+                margin: 12
+            },
+            axisTick: { show: false },
+            axisLine: { lineStyle: { color: '#3f3f46' } }
         },
         yAxis: {
             type: 'value',
-            axisLabel: { color: '#a1a1aa', fontFamily: 'Cascadia Mono' },
+            axisLabel: { color: '#a1a1aa', fontFamily: 'Cascadia Mono', fontSize: 11 },
             splitLine: { lineStyle: { color: '#27272a' } }
         },
         series: buildSeries(data, config)
     };
-
-    if (colors?.length) option.color = colors;
-
-    return option;
 }
-
 /* ============================================================================
  * Reusable Line Chart Component
  * ----------------------------------------------------------------------------
@@ -128,9 +133,9 @@ export default function LineChart<T>({ data, config }: LineChartProps<T>) {
             notMerge={true}
             opts={{ 
                 renderer, 
-                devicePixelRatio: typeof window !== 'undefined' 
-                    ? window.devicePixelRatio 
-                    : 1 
+                devicePixelRatio: 
+                    typeof window !== 'undefined' ? 
+                        window.devicePixelRatio : 1 
             }}
         />
     );

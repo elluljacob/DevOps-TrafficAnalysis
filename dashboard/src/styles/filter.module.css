@@ -96,3 +96,118 @@
   height: 30px;
   color: #059669;
 }
+
+
+/* ============================================================================
+ * Searchable Container
+ * ============================================================================ */
+
+.dropdownContainer {
+    position: relative;
+    width: 250px; /* Static width */
+    font-family: sans-serif;
+}
+
+.dropdownTrigger {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background-color: var(--second-colour);
+    color: white;
+    border: 2px solid rgba(0, 0, 0, 0.6);
+    border-radius: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.dropdownTrigger:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* The "Hovering" Menu */
+.dropdownMenu {
+    position: absolute;
+    top: calc(100% + 8px); /* Sits just below the trigger */
+    left: 0;
+    z-index: 1000; /* Ensures it stays on top of other elements */
+    width: 100%;
+    
+    /* Bubble Design from cd_styles.indentedBubble */
+    background-color: var(--second-colour);
+    border: 2px solid rgba(0, 0, 0, 0.6);
+    border-radius: 1rem;
+    padding: 1.5rem; /* Matched to your indentedBubble spec */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+/** * THE GAP FIX: 
+ * This creates an invisible bridge between the button and the menu 
+ * so the mouse 'hover' isn't lost in the 8px gap.
+ */
+.dropdownMenu::before {
+    content: "";
+    position: absolute;
+    top: -10px; /* Covers the 8px gap + a tiny bit of overlap */
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: transparent;
+}
+
+.internalSearch {
+    width: 100%;
+    padding: 0.5rem;
+    background: #202024;
+    border: 1px solid #333;
+    border-radius: 0.5rem;
+    color: white;
+    outline: none;
+    margin-bottom: 0.5rem;
+}
+
+.optionsList {
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+/* Custom Scrollbar for the bubble look */
+.optionsList::-webkit-scrollbar {
+    width: 6px;
+}
+.optionsList::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.optionItem {
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    color: #ccc;
+    transition: background 0.2s, color 0.2s;
+}
+
+.optionItem:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.active {
+    background-color: rgba(255, 255, 255, 0.15); /* Subtle active state */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.noResults {
+    padding: 0.5rem;
+    color: #666;
+    font-size: 0.9rem;
+}
