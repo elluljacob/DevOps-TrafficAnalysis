@@ -4,9 +4,10 @@ import React, { useState } from 'react'
 import am_styles from '@/styles/admin.module.css'
 import cd_styles from '@/styles/common_dashboard.module.css'
 import { StreamObject } from '@/types/stream';
-import { StreamProvider, useStreams} from '@/components/global/stream_list';
+import { useStreams} from '@/components/global/stream_list';
 import { StreamForm } from '@/components/admin_page/stream_form';
 import { StreamTable } from '@/components/admin_page/stream_table';
+import { PasswordModal } from './admin_page/password_popup';
 
 /* ============================================================================
  * AdminPage Component
@@ -20,19 +21,19 @@ import { StreamTable } from '@/components/admin_page/stream_table';
  * Wrapped in StreamProvider so useHandlers can access the refresh logic.
  * ============================================================================
  */
-export default function AdminPage() {
-    return (
-        <StreamProvider>
-            <AdminContent />
-        </StreamProvider>
-    )
-}
 
-function AdminContent() {
+export default function AdminPage() {
     const handlers = useHandlers()
 
     return (
         <div className={`${am_styles.pageContainer} ${cd_styles.bubble}`}>
+            {/* 1. Add the Modal here so it can actually appear */}
+            <PasswordModal 
+                isOpen={handlers.isModalOpen} 
+                onClose={() => handlers.setModalOpen(false)} 
+                onConfirm={handlers.confirmSubmit} 
+            />
+
             <StreamForm
                 data             ={handlers.formData}
                 password         ={handlers.password}
@@ -42,7 +43,7 @@ function AdminContent() {
                 onSubmit         ={handlers.handleSubmit}
                 onCancel         ={handlers.resetForm}
             />
-            {/* StreamTable now correctly sits inside the Provider via AdminPage */}
+            
             <StreamTable
                 onEdit      ={handlers.handleEdit}
                 onDelete    ={handlers.handleDelete}
@@ -50,7 +51,6 @@ function AdminContent() {
         </div>
     )
 }
-
 
 
 
@@ -77,6 +77,10 @@ const emptyCamera: StreamObject = {
  * ============================================================================
  */
 function useHandlers() {
+    const [isModalOpen, setModalOpen]                   = useState(false);
+    const [modalAction, setModalAction]                 = useState<'SAVE' | 'DELETE' | null>(null);
+    const [pendingDeleteStream, setPendingDeleteStream] = useState<StreamObject | null>(null);
+
     const { refresh                 } = useStreams(); // <- get refresh from context
     const [cameras  , setCameras    ] = useState<StreamObject[]>([])
     const [formData , setFormData   ] = useState<StreamObject>(emptyCamera)
@@ -118,65 +122,72 @@ function useHandlers() {
     /* -------------------------------------------------------------------
      * API: Delete Handler
      * ------------------------------------------------------------------- */
-    const handleDelete = async (stream: StreamObject) => {
-        if (!password) return alert("Enter admin password in the form first to delete")
-        if (!confirm(`Are you sure you want to delete ${stream.ID}?`)) return
-
-        try {
-            const res = await fetch(`/api/admin?id=${stream.ID}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
-            })
-
-            if (!res.ok) {
-                const err = await res.json()
-                throw new Error(err.error || "Delete failed")
-            }
-
-            await refresh() // <- force global list update
-        } catch (err: any) {
-            console.error("Delete error:", err)
-            alert(err.message || "Network error")
-        }
-    }
+    const handleDelete = (stream: StreamObject) => {
+        // Instead of window.confirm, we use the SSH Modal
+        setPendingDeleteStream(stream);
+        setModalAction('DELETE');
+        setModalOpen(true);
+    };
     /* -------------------------------------------------------------------
      * API: Submission Handler (Add/Update)
      * ------------------------------------------------------------------- */
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        if (!password) return alert("Password required")
-        if (formData.lat < -90 || formData.lat > 90) return alert("Latitude error (-90 to 90)")
-        if (formData.long < -180 || formData.long > 180) return alert("Longitude error (-180 to 180)")
+        // Re-adding your validation checks here:
+        if (formData.lat < -90 || formData.lat > 90) {
+            return alert("Latitude error (-90 to 90)");
+        }
+        if (formData.long < -180 || formData.long > 180) {
+            return alert("Longitude error (-180 to 180)");
+        }
+        if (!formData.ID || !formData.url) {
+            return alert("ID and URL are required");
+        }
+
+        // Only if validation passes, we open the modal
+        setModalAction('SAVE');
+        setModalOpen(true);
+    };
+
+    const confirmSubmit = async (enteredPassword: string) => {
+        if (!enteredPassword) return alert("Password required.");
 
         try {
-            const res = await fetch('/api/admin', {
-                method: isEditing ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                // Ensure password is included in the body
-                body: JSON.stringify({ ...formData, password }) 
-            })
-
-            const result = await res.json()
-
-            if (!res.ok) {
-                throw new Error(result.error || "Action failed")
+            if (modalAction === 'SAVE') {
+                const res = await fetch('/api/admin', {
+                    method: isEditing ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...formData, password: enteredPassword })
+                });
+                if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+                
+                alert(isEditing ? "Updated successfully!" : "Added successfully!");
+            } 
+            
+            else if (modalAction === 'DELETE' && pendingDeleteStream) {
+                const res = await fetch(`/api/admin?id=${pendingDeleteStream.ID}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: enteredPassword })
+                });
+                if (!res.ok) throw new Error((await res.json()).error || "Delete failed");
+                
+                alert(`Stream ${pendingDeleteStream.ID} deleted.`);
             }
 
-            // ONLY reset if the server confirmed success
-            await refresh() 
-            resetForm()
-            alert(isEditing ? "Updated successfully!" : "Added successfully!")
-            
+            // Common Success Logic
+            await refresh();
+            setModalOpen(false);
+            resetForm();
+            setPendingDeleteStream(null);
+            setModalAction(null);
+
         } catch (err: any) {
-            console.error("Submit error:", err)
-            // Form stays filled so user can fix the error (e.g., wrong password)
-            alert(err.message || "Network error")
+            console.error("Auth Error:", err);
+            alert(err.message || "Action failed");
         }
-    }
-
-
+    };
 
 
     /* ====================================================================
@@ -185,7 +196,8 @@ function useHandlers() {
     return {
         cameras,            formData,       password,       isEditing,
         handleInputChange,  handleSubmit,   handleEdit,     handleDelete,
-        resetForm,          setPassword
+        resetForm,          setPassword ,  isModalOpen,     setModalOpen, 
+        confirmSubmit
     }
 }
 

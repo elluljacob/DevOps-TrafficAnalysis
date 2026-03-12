@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import cd_styles from '@/styles/common_dashboard.module.css'
 import md_styles from '@/styles/main_dashboard.module.css'
 import TrafficControls from '@/components/traffic_controller'
 import StatisticsPage from '@/components/statistics_page'
 import AdminPage from '@/components/admin_page'
+import { StreamProvider } from './global/stream_list'
 
 const ChevronLeft = () => (
   <svg width="24" height="24" viewBox="0 0 24 24">
@@ -75,46 +75,48 @@ export default function SwappableDashboard() {
     }, [index, displayPages.length]);
 
     return (
-        <div className={md_styles.layoutWrapper}>
-            <aside className={md_styles.sidebar}>
-                <TrafficControls />
-            </aside>
+        <StreamProvider>
+            <div className={md_styles.layoutWrapper}>
+                <aside className={md_styles.sidebar}>
+                    <TrafficControls />
+                </aside>
 
-            {/* Main acts as the 'Window' */}
-            <main className="relative flex-1 h-full overflow-hidden ">
-                
-                {/* Navigation - Absolute so they stay pinned while pages slide */}
-                <div className={md_styles.triggerZoneLeft}>
-                    <button className={md_styles.navArrowLeft} onClick={prev}>
-                        <ChevronLeft />
-                    </button>
-                </div>
+                {/* Main acts as the 'Window' */}
+                <main className="relative flex-1 h-full overflow-hidden ">
+                    
+                    {/* Navigation - Absolute so they stay pinned while pages slide */}
+                    <div className={md_styles.triggerZoneLeft}>
+                        <button className={md_styles.navArrowLeft} onClick={prev}>
+                            <ChevronLeft />
+                        </button>
+                    </div>
 
-                {/* Right Side Trigger */}
-                <div className={md_styles.triggerZoneRight}>
-                    <button className={md_styles.navArrowRight} onClick={next}>
-                        <ChevronRight />
-                    </button>
-                </div>
+                    {/* Right Side Trigger */}
+                    <div className={md_styles.triggerZoneRight}>
+                        <button className={md_styles.navArrowRight} onClick={next}>
+                            <ChevronRight />
+                        </button>
+                    </div>
 
-                {/* The Sliding Track */}
-                <div 
-                    className="flex h-full w-full"
-                    style={{ 
-                        transform: `translateX(-${index * 100}%)`,
-                        transition: isTransitioning ? 'transform 500ms ease-in-out' : 'none'
-                    }}
-                >
-                    {displayPages.map((page, i) => (
-                        <div 
-                            key={`${page.id}-${i}`} 
-                            className="w-full h-full flex-shrink-0 overflow-auto"
-                        >
-                            {page.component}
-                        </div>
-                    ))}
-                </div>
-            </main>
-        </div>
+                    {/* The Sliding Track */}
+                    <div 
+                        className="flex h-full w-full"
+                        style={{ 
+                            transform: `translateX(-${index * 100}%)`,
+                            transition: isTransitioning ? 'transform 500ms ease-in-out' : 'none'
+                        }}
+                    >
+                        {displayPages.map((page, i) => (
+                            <div 
+                                key={`${page.id}-${i}`} 
+                                className="w-full h-full flex-shrink-0 overflow-auto"
+                            >
+                                {page.component}
+                            </div>
+                        ))}
+                    </div>
+                </main>
+            </div>
+        </StreamProvider>
     )
 }

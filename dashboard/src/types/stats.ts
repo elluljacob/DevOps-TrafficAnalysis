@@ -7,7 +7,7 @@
  */
 
 export type PieChartResult = {
-    camera: string
+    stream: StreamID
     data : {
         label: string
         value: number
@@ -23,4 +23,4 @@ export interface HistoryDataPoint {
 
 export type TimeRange = 'live' | '1h' | '24h' | '7d' | '30d' | '1y';
 
-export type CameraObject = string
+export type StreamID = string

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/database";
-import { StreamObject } from "@/types/stream";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "supersecret";
 /* ============================================================================

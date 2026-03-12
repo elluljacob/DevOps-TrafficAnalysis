@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/database";
 import { StreamObject } from "@/types/stream";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
         const pool = await getDb();
 

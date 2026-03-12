@@ -1,8 +1,7 @@
 'use client'
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { StreamObject } from '@/types/stream'
-import { log, LogLevel } from '@/lib/logger'
 
 /* ============================================================================
  * Stream UI Type
@@ -33,77 +32,72 @@ const StreamContext = createContext<StreamContextType | null>(null)
  * ============================================================================ 
  */
 export function StreamProvider({ children }: { children: React.ReactNode }) {
-
-    const [streams, setStreams] = useState<Record<string, StreamUI>>({})
+    const [streams, setStreams] = useState<Record<string, StreamUI>>({});
+    // Use a Ref instead of State to track first load without triggering re-renders
+    const isFirstLoad = useRef(true);
 
     /* -------------------------------------------------------------------
      * Toggle selected state
      * ------------------------------------------------------------------- */
     const toggleStream = (id: string) => {
-
         setStreams(prev => {
+            const stream = prev[id];
+            if (!stream) return prev;
 
-            const stream = prev[id]
-            if (!stream) return prev
-
-            const updated: Record<string, StreamUI> = {}
-
-            for (const key in prev) {
-
-                const s = prev[key]
-
-                if (key === id) {
-                    updated[key] = {
-                        ID      : s.ID,     loc     : s.loc,
-                        url     : s.url,    lat     : s.lat,
-                        long    : s.long,   selected: !s.selected
-                    }
-                } else {
-                    updated[key] = s
-                }
-            }
-
-            return updated
-        })
-    }
+            return {
+                ...prev,
+                [id]: { ...stream, selected: !stream.selected }
+            };
+        });
+    };
 
     /* -------------------------------------------------------------------
-     *  Fetch streams from API
-     * ------------------------------ ------------------------------------- */
+     * Fetch streams from API
+     * ------------------------------------------------------------------- */
     const fetchStreams = useCallback(async () => {
         try {
-            const res = await fetch('/api/get_streams')
-            if (!res.ok) return
-
-            const incoming: StreamObject[] = await res.json()
+            const res = await fetch('/api/get_streams');
+            if (!res.ok) return;
+            const incoming: StreamObject[] = await res.json();
 
             setStreams(prev => {
-                const updated: Record<string, StreamUI> = {}
-                for (const stream of incoming) {
-                    const existing = prev[stream.ID]
-                    updated[stream.ID] = {
-                        ...stream, // Cleaner spread
-                        selected: existing ? existing.selected : false
-                    }
-                }
-                return updated
-            })
+                const updated: Record<string, StreamUI> = {};
+                incoming.forEach((stream, index) => {
+                    const existing = prev[stream.ID];
+                    // Use .current for the ref check
+                    const shouldBeSelected = existing ? existing.selected : (isFirstLoad.current && index < 3);
+                    
+                    updated[stream.ID] = { ...stream, selected: shouldBeSelected };
+                });
+                return updated;
+            });
+
+            // Update ref without triggering a re-render
+            if (incoming.length > 0) {
+                isFirstLoad.current = false;
+            }
         } catch (err) {
-            console.error("Stream fetch failed", err)
+            console.error("Stream fetch failed", err);
         }
-    }, []) // Empty deps mean this function identity is stable
+    }, []); // No dependencies needed now!
 
-    /* -------------------------------------------------------------------
-     * Poll every 30 seconds
-     * ------------------------------------------------------------------- */
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        fetchStreams()
+        // Define a flag to prevent state updates if the component unmounts
+        let isMounted = true;
 
-        const interval = setInterval(fetchStreams, 5000)
-        
-        return () => clearInterval(interval);
-    }, [fetchStreams])
+        const tick = async () => {
+            await fetchStreams();
+        };
+
+        tick(); // Initial fetch
+
+        const interval = setInterval(tick, 5000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [fetchStreams]);
 
     return (
         <StreamContext.Provider
@@ -115,9 +109,8 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
         >
             {children}
         </StreamContext.Provider>
-    )
+    );
 }
-
 /* ============================================================================
  * Hook
  * ============================================================================ 

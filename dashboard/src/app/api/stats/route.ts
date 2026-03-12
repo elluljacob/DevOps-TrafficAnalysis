@@ -2,33 +2,29 @@ import { NextResponse, NextRequest } from 'next/server'
 import { PieChartResult } from '@/types/stats'
 import { aggregateCameraData } from '@/app/api/stats/testing_db'
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
-        const searchParams = request.nextUrl.searchParams;
+        const { searchParams } = new URL(req.url);
+        const idsString = searchParams.get('ids');
+        
+        const cameraIds = idsString ? idsString.split(',') : ["cam1", "cam2", "cam3"];
 
-        // Get averaged counts per camera
-        const cameraData = await aggregateCameraData();
+        const cameraData = await aggregateCameraData(cameraIds);
 
-        // Convert each camera into TrafficEntry format
         const pieChartResult: PieChartResult[] = cameraData.map((cam) => ({
-            camera: cam.cameraId,
+            stream: cam.cameraId,
             data: [
-                { label: "Cars"         , value: cam.counts.car_count       },
-                { label: "Trucks"       , value: cam.counts.truck_count     },
-                { label: "Pedestrians"  , value: cam.counts.person_count    },
-                { label: "Bikes"        , value: 0                          },   // Add when supported
-                { label: "Buses"        , value: 0                          }    // Add when supported
+                { label: "Cars",         value: cam.counts.car_count },
+                { label: "Trucks",       value: cam.counts.truck_count },
+                { label: "Pedestrians",  value: cam.counts.person_count },
+                { label: "Bikes",        value: cam.counts.bike_count },
+                { label: "Buses",        value: cam.counts.bus_count }
             ]
         }));
 
-
-    return NextResponse.json(pieChartResult);
-
+        return NextResponse.json(pieChartResult);
     } catch (err) {
-        console.error(err);
-        return NextResponse.json(
-            { error: "Failed to fetch stats" },
-            { status: 500 }
-        );
+        console.error("API Stats Error:", err);
+        return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
     }
 }

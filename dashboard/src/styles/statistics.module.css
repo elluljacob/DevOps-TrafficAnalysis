@@ -23,6 +23,7 @@
 .timeStatusBar{
     display: flex;
     flex-direction: row;
+    margin-bottom: 1.5rem;
 }
 
 @keyframes bubbleEntry {
@@ -53,5 +54,13 @@
     /* Once the data-gate opens, it waits 0.3s so the user sees 
        the pie charts finish their animation first */
     animation: bubbleEntry 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    margin-bottom: 1rem;
 }
+
+
+.timeline{
+    height: 25rem;
+}
+
+
 

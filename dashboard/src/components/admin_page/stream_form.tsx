@@ -124,16 +124,6 @@ export function StreamForm(options: FormOptions) {
                     onChange ={options.onChange}
                 />
 
-                <InputField
-                    label   ="Admin Password"
-                    name    ="password" // Crucial for identifying the field
-                    type    ="password"
-                    value   ={options.password}
-                    placeholder="Required for DB changes"
-                    // Pass the value directly to the setPassword handler
-                    onChange={(e) => options.onPasswordChange(e.target.value)}
-                />
-
                 <div className={am_styles.buttons}>
 
                     <button 

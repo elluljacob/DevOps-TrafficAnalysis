@@ -1,149 +1,28 @@
 'use client'
 import { useEffect, useState } from 'react'
-import PieChart  from '@/components/chart_generators/generate_piechart'
-import LineChart from '@/components/chart_generators/generate_linechart'
-import st_styles from '@/styles/statistics.module.css'
-import cd_styles from '@/styles/common_dashboard.module.css'
-import { HistoryDataPoint, TimeRange, CameraObject, PieChartResult } from '@/types/stats'
-import SelectDropdown from './filters'
-import ft_styles from '@/styles/filter.module.css'
+import { HistoryDataPoint, TimeRange, PieChartResult, StreamID } from '@/types/stats'
+import TrafficChartTimeline from '@/components/statistics_page/timeline'
+import { SimplePieCharts } from '@/components/statistics_page/simple_piecharts'
+import { useStreams } from '@/components/global/stream_list'
 
-/* ============================================================================
- * Constants
- * ============================================================================
- */
-const VEHICLE_CATEGORIES = [
-    'Cars',
-    'Bikes',
-    'Buses',
-    'Trucks',
-    'Pedestrians'
-]
-
-const CHART_COLORS = [
-    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'
-]
-
-export const TIME_RANGE_OPTIONS = [
-    { label: 'Live (Last 5m)', value: 'live' },
-    { label: 'Last Hour', value: '1h' },
-    { label: 'Last 24h', value: '24h' },
-    { label: 'Last 7 Days', value: '7d' }
-] as const
-
-export const CAMERA_OPTIONS = [
-    { label: 'Camera 1', value: 'cam1' },
-    { label: 'Camera 2', value: 'cam2' },
-    { label: 'Camera 3', value: 'cam3' }
-] as const
-
-/* ============================================================================
- * TrafficChartTimeline Component
- * ============================================================================
- */
-function TrafficChartTimeline({
-    history,
-    range,
-    camera,
-    setRange,
-    setCamera
-}: {
-    history: HistoryDataPoint[]
-    range: TimeRange
-    camera: CameraObject
-    setRange: (val: TimeRange) => void
-    setCamera: (val: CameraObject) => void
-}) {
-    return (
-        <div className={`${cd_styles.bubble} ${cd_styles.fullWidth} ${st_styles.timeBubble}`}>
-            <div className={st_styles.timeStatusBar}>
-                <h3 className={cd_styles.thirdHeaderFormat}>
-                    Real-time Telemetry
-                </h3>
-                <div className={ft_styles.filterGroup}>
-                    <SelectDropdown value={camera} setValue={setCamera} options={CAMERA_OPTIONS} />
-                    <SelectDropdown value={range} setValue={setRange} options={TIME_RANGE_OPTIONS} />
-                </div>
-            </div>
-            <div className="h-[450px]">
-                <LineChart
-                    data={history}
-                    config={{
-                        xKey: 'timestamp',
-                        series: VEHICLE_CATEGORIES as any,
-                        colors: CHART_COLORS,
-                        height: '100%',
-                        width: '100%',
-                        legendPosition: 'top',
-                        renderer: 'canvas',
-                        xAxisFormatter: (val) =>
-                            new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    }}
-                />
-            </div>
-        </div>
-    )
-}
-
-/* ============================================================================
- * SimplePieCharts Component
- * ============================================================================
- */
-function SimplePieCharts({
-    pieData = []
-}: {
-    pieData?: PieChartResult[]
-}) {
-
-    return (
-        <div className={st_styles.pieRow}>
-            {pieData.map((entry, index) => {
-                const total = entry.data.reduce((sum, item) => sum + item.value, 0)
-                const isEmpty = total === 0
-                const chartColors = isEmpty ? entry.data.map(() => '#b8b8b896') : CHART_COLORS
-
-                return (
-                    <div key={index} className={`${cd_styles.bubble} ${st_styles.pieBubble}`}>
-                        <h3 className={cd_styles.thirdHeaderFormat}>{entry.camera}</h3>
-                        <div className={st_styles.pieChartWrapper}>
-                            <PieChart
-                                data={entry.data}
-                                config={{
-                                    labelKey: 'label',
-                                    valueKey: 'value',
-                                    renderer: 'canvas',
-                                    height: '100%',
-                                    width: '100%',
-                                    radius: ['35%', '65%'],
-                                    innerLabel: true,
-                                    legendPosition: 'bottom',
-                                    colors: chartColors,
-                                    itemStyle: {
-                                        borderRadius: '10%',
-                                        borderColor: 'transparent',
-                                        borderWidth: '0.5'
-                                    }
-                                }}
-                            />
-                        </div>
-                    </div>
-                )
-            })}
-        </div>
-    )
-}
 /* ============================================================================
  * usePieData Hook
  * ============================================================================
  */
-function usePieData(range: TimeRange) {
+function usePieData(selectedIds: string[]) {
     const [pieData, setPieData] = useState<PieChartResult[]>([])
 
     useEffect(() => {
-        // Move function inside to keep dependencies clean
+        // If no IDs are selected, we just don't start the fetch/interval logic.
+        // We don't call setState here to avoid the "cascading render" error.
+        if (selectedIds.length === 0) {
+            return;
+        }
+
         const fetchData = async () => {
             try {
-                const res = await fetch('/api/stats')
+                const idsParam = selectedIds.join(',');
+                const res = await fetch(`/api/stats?ids=${idsParam}`)
                 const result: PieChartResult[] = await res.json()
                 setPieData(result ?? [])
             } catch (err) {
@@ -151,25 +30,27 @@ function usePieData(range: TimeRange) {
             }
         }
 
-        fetchData() // Initial call
+        fetchData()
         const interval = setInterval(fetchData, 5000)
         return () => clearInterval(interval)
-    }, [range]) 
+        
+    }, [selectedIds.join(',')]) 
 
-    return pieData
+    // This handles the "UI reset" when cameras are deselected 
+    // without needing a synchronous setState in the effect.
+    return selectedIds.length === 0 ? [] : pieData;
 }
-
 /* ============================================================================
  * useCameraHistory Hook
  * ============================================================================
  */
-function useCameraHistory(range: TimeRange, camera: CameraObject) {
+function useCameraHistory(range: TimeRange, stream: StreamID) {
     const [history, setHistory] = useState<HistoryDataPoint[]>([])
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch(`/api/camera_history?range=${range}&camera=${camera}`)
+                const res = await fetch(`/api/stream_history?range=${range}&stream=${stream}`)
                 const result = await res.json()
                 
                 if (result && Array.isArray(result.history)) {
@@ -186,7 +67,7 @@ function useCameraHistory(range: TimeRange, camera: CameraObject) {
         fetchData() // Initial call
         const interval = setInterval(fetchData, 30000)
         return () => clearInterval(interval)
-    }, [range, camera])
+    }, [range, stream])
 
     return history
 }
@@ -194,32 +75,32 @@ function useCameraHistory(range: TimeRange, camera: CameraObject) {
  * StatisticsPage Component
  * ============================================================================
  */
+
 export default function StatisticsPage() {
     const [range, setRange] = useState<TimeRange>('live')
-    const [camera, setCamera] = useState<CameraObject>('cam1')
+    const [stream, setStream] = useState<StreamID>('cam1')
 
-    // Fetch both datasets
-    const pieData = usePieData(range)
-    const history = useCameraHistory(range, camera)
-
-    // Determine if the "First Stage" (Pies) is ready
-    const isPieDataLoaded = pieData && pieData.length > 0
+    const { streams } = useStreams()
+    
+    // Get array of IDs that are currently selected
+    const selectedIds = Object.keys(streams).filter(id => streams[id].selected)
+    
+    // Pass those IDs to the hook
+    const pieData = usePieData(selectedIds)
+    const history = useCameraHistory(range, stream)
 
     return (
         <>
-            {/* 1. Pie charts load/animate as soon as data arrives */}
-            <SimplePieCharts pieData={pieData} />
-
-            {/* 2. Timeline only enters the DOM once pieData is ready */}
-            {isPieDataLoaded && (
+            {pieData.length > 0 && (
                 <TrafficChartTimeline
                     history={history}
                     range={range}
-                    camera={camera}
+                    stream={stream}
                     setRange={setRange}
-                    setCamera={setCamera}
+                    setStream={setStream}
                 />
             )}
+            <SimplePieCharts pieData={pieData} />
         </>
     )
 }
