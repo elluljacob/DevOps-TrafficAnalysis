@@ -15,9 +15,19 @@ export type VehicleCategory = keyof typeof VEHICLE_CONFIG;
 
 export const VEHICLE_CATEGORIES = Object.keys(VEHICLE_CONFIG) as VehicleCategory[];
 
-export const TIME_RANGE_OPTIONS = [
+
+
+export const TIME_RANGE_TIMELINE = [
     { label: 'Live (Last 5m)'   , value: 'live' },
     { label: 'Last Hour'        , value: '1h'   },
     { label: 'Last 24h'         , value: '24h'  },
     { label: 'Last 7 Days'      , value: '7d'   }
 ] as const
+
+export const TIME_RANGE_PIECHARTS = [
+    { label: 'Live (Last 5s)'   , value: 'live' },
+    { label: 'Last Hour'        , value: '1h'   },
+    { label: 'Last 24h'         , value: '24h'  },
+    { label: 'Last 7 Days'      , value: '7d'   }
+] as const
+
