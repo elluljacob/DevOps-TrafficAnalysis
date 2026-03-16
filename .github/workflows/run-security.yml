@@ -35,12 +35,10 @@ jobs:
       # Secret scan
       - name: Secret scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
-        with:
-          args: detect --source . --log-level debug --redact -v --staged
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_UPLOAD_ARTIFACT: false
-
+          GITLEAKS_ENABLE_COMMENTS: false
       # Dependency scan: Node
       - name: Set up Node.js
         if: inputs.runtime == 'node'

@@ -1,6 +1,9 @@
 [extend]
 useDefault = true
 
+[baseline]
+path = ".gitleaks-baseline.json"
+
 [[allowlists]]
 description = "Ignore virtual environments and baseline file"
 paths = [
