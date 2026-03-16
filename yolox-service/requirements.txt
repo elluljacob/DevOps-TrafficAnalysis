@@ -8,6 +8,8 @@ tabulate
 thop
 psycopg2-binary
 mypy
+typeguard
+pyyaml
 pytest
 pytest-mock
 pytest-timeout

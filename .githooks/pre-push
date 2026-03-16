@@ -28,13 +28,14 @@ fi
 echo ""
 echo "yolox-service"
 cd "$REPO_ROOT/yolox-service"
-$PYTHON -m pip install --quiet -r requirements.txt
-
-if [ -f "venv/bin/python" ]; then
-    PYTHON="venv/bin/python"
-else
-    PYTHON="python3"
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
+    ./venv/bin/pip install --upgrade pip
+    ./venv/bin/pip install flake8 black mypy pytest pytest-mock
+    ./venv/bin/pip install -r requirements.txt 
 fi
+
+PYTHON="./venv/bin/python"
 
 echo "  pytest..."
 # -v for verbosity, and point it to the 'test' directory explicitly

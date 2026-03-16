@@ -71,5 +71,6 @@ jobs:
       - name: Unit tests
         if: inputs.runtime == 'python'
         run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/yolox-consumer
-          pytest test/ --tb=short -m "not integration"
+          pip install --upgrade pip
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
