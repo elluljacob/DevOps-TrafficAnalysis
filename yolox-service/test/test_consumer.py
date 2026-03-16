@@ -1,13 +1,16 @@
 import base64
 import json
-
-import cv2
-import numpy as np
-import torch
 from unittest.mock import MagicMock
 
+from consumer import make_callback, process_frame
+
+import cv2
+
+import numpy as np
+
+import torch
+
 from yolox.data.datasets import COCO_CLASSES
-from consumer import process_frame, make_callback
 
 
 def _make_predictor(fake_output):
@@ -26,10 +29,12 @@ def _make_test_image_b64():
 
 class TestProcessFrame:
     def test_with_detections(self):
-        fake_output = torch.tensor([
-            [100, 100, 200, 200, 0.9, 0.8, 2],
-            [300, 300, 400, 400, 0.7, 0.6, 0],
-        ])
+        fake_output = torch.tensor(
+            [
+                [100, 100, 200, 200, 0.9, 0.8, 2],
+                [300, 300, 400, 400, 0.7, 0.6, 0],
+            ]
+        )
         predictor = _make_predictor(fake_output)
         frame = np.zeros((640, 640, 3), dtype=np.uint8)
 
@@ -51,9 +56,11 @@ class TestProcessFrame:
 
 class TestMessageCallback:
     def test_valid_message(self):
-        fake_output = torch.tensor([
-            [100, 100, 200, 200, 0.9, 0.8, 2],
-        ])
+        fake_output = torch.tensor(
+            [
+                [100, 100, 200, 200, 0.9, 0.8, 2],
+            ]
+        )
         predictor = _make_predictor(fake_output)
         db_writer = MagicMock()
 

@@ -1,5 +1,6 @@
-import sys
+# Standard Library
 import os
+import sys
 from unittest.mock import MagicMock
 
 # Mock psycopg2 before any imports so database.py can be imported without a real DB

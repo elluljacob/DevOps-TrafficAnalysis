@@ -2,10 +2,13 @@
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii, Inc. and its affiliates.
 
+# Standard Library
 import os
 
+# Third Party
 import torch.nn as nn
 
+# Local
 from yolox.exp import Exp as MyExp
 
 
@@ -31,6 +34,7 @@ class Exp(MyExp):
                     m.momentum = 0.03
 
         if "model" not in self.__dict__:
+            # Local
             from yolox.models import YOLOPAFPN, YOLOX, YOLOXHead
 
             in_channels = [256, 512, 1024]

@@ -31,7 +31,7 @@ fi
 
 # Flake8 lint
 echo "  flake8..."
-if ! $PYTHON -m flake8 . --exclude=venv,__pycache__ --max-line-length=120 --quiet; then
+if ! $PYTHON -m flake8 .; then
     echo "flake8: lint errors found."
     FAILED=1
 else
@@ -59,7 +59,8 @@ fi
 $PYTHON -m pip install --quiet flake8 black mypy
 
 echo "  black..."
-if ! $PYTHON -m black --check --quiet ./yolox-consumer; then
+if ! $PYTHON -m black --check --quiet . --exclude 'venv/|__pycache__/|yolox/|.mypy_cache/'; then
+    $PYTHON -m black --diff . --exclude 'venv/|yolox/'
     echo "black: formatting issues found. Run 'black .' to fix."
     FAILED=1
 else
@@ -67,7 +68,8 @@ else
 fi
 
 echo "  flake8..."
-if ! $PYTHON -m flake8 ./yolox-consumer --exclude=venv,__pycache__,yolox --max-line-length=120 --quiet; then
+# CHANGE THIS: Let it use your setup.cfg rules
+if ! $PYTHON -m flake8 .; then
     echo "flake8: lint errors found."
     FAILED=1
 else

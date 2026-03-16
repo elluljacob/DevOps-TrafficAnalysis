@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) Megvii Inc. All rights reserved.
 
+# Standard Library
 import os
 import random
 
+# Third Party
 import torch
 import torch.distributed as dist
 import torch.nn as nn
@@ -109,6 +111,7 @@ class Exp(BaseExp):
         self.nmsthre = 0.65
 
     def get_model(self):
+        # Local
         from yolox.models import YOLOPAFPN, YOLOX, YOLOXHead
 
         def init_yolo(M):
@@ -141,6 +144,7 @@ class Exp(BaseExp):
                 "ram" : Caching imgs to ram for fast training.
                 "disk": Caching imgs to disk for fast training.
         """
+        # Local
         from yolox.data import COCODataset, TrainTransform
 
         return COCODataset(
@@ -166,6 +170,7 @@ class Exp(BaseExp):
                 "disk": Caching imgs to disk for fast training.
                 None: Do not use cache, in this case cache_data is also None.
         """
+        # Local
         from yolox.data import (
             DataLoader,
             InfiniteSampler,
@@ -286,6 +291,7 @@ class Exp(BaseExp):
         return self.optimizer
 
     def get_lr_scheduler(self, lr, iters_per_epoch):
+        # Local
         from yolox.utils import LRScheduler
 
         scheduler = LRScheduler(
@@ -301,6 +307,7 @@ class Exp(BaseExp):
         return scheduler
 
     def get_eval_dataset(self, **kwargs):
+        # Local
         from yolox.data import COCODataset, ValTransform
 
         testdev = kwargs.get("testdev", False)
@@ -336,6 +343,7 @@ class Exp(BaseExp):
         return val_loader
 
     def get_evaluator(self, batch_size, is_distributed, testdev=False, legacy=False):
+        # Local
         from yolox.evaluators import COCOEvaluator
 
         return COCOEvaluator(
@@ -350,6 +358,7 @@ class Exp(BaseExp):
         )
 
     def get_trainer(self, args):
+        # Local
         from yolox.core import Trainer
 
         trainer = Trainer(self, args)

@@ -9,12 +9,15 @@ The data augmentation procedures were interpreted from @weiliu89's SSD paper
 http://arxiv.org/abs/1512.02325
 """
 
+# Standard Library
 import math
 import random
 
+# Third Party
 import cv2
 import numpy as np
 
+# Local
 from yolox.utils import xyxy2cxcywh
 
 
@@ -41,7 +44,9 @@ def get_aug_params(value, center=0):
     else:
         raise ValueError(
             "Affine params should be either a sequence containing two values\
-             or single float values. Got {}".format(value)
+             or single float values. Got {}".format(
+                value
+            )
         )
 
 
