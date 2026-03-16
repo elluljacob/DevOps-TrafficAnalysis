@@ -70,4 +70,6 @@ jobs:
 
       - name: Unit tests
         if: inputs.runtime == 'python'
-        run: pytest --tb=short -m "not integration"
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/yolox-consumer
+          pytest test/ --tb=short -m "not integration"

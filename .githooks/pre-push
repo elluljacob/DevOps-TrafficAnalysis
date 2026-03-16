@@ -35,16 +35,13 @@ else
     PYTHON="python3"
 fi
 
-if [ -d "yolox-consumer/test" ]; then
-    echo "  pytest..."
-    if ! PYTHONPATH="" $PYTHON -m pytest yolox-consumer/test/ -v --tb=short -q; then
-        echo "pytest: tests failed."
-        FAILED=1
-    else
-        echo "pytest"
-    fi
+echo "  pytest..."
+# -v for verbosity, and point it to the 'test' directory explicitly
+if ! $PYTHON -m pytest test/ -v; then
+    echo "pytest: tests failed."
+    FAILED=1
 else
-    echo "No tests found, skipping."
+    echo "pytest passed"
 fi
 
 echo ""
