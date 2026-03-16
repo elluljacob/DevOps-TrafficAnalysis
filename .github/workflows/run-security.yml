@@ -39,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_UPLOAD_ARTIFACT: false
           GITLEAKS_ENABLE_COMMENTS: false
-          GITLEAKS_BASELINE_PATH: .gitleaks-baseline.json
+
       # Dependency scan: Node
       - name: Set up Node.js
         if: inputs.runtime == 'node'

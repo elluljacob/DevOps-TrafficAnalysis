@@ -12,3 +12,9 @@ paths = [
     '''node_modules/''',
     '''.gitleaks-baseline.json'''
 ]
+
+[[allowlists]]
+description = "OpenCV API constants are not API keys"
+regexes = [
+    '''api\.CV_'''
+]
