@@ -8,3 +8,5 @@ tabulate
 thop
 psycopg2-binary
 mypy
+pytest
+pytest-timeout
