@@ -9,4 +9,5 @@ thop
 psycopg2-binary
 mypy
 pytest
+pytest-mock
 pytest-timeout

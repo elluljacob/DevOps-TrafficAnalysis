@@ -28,6 +28,7 @@ fi
 echo ""
 echo "yolox-service"
 cd "$REPO_ROOT/yolox-service"
+$PYTHON -m pip install --quiet -r requirements.txt
 
 if [ -f "venv/bin/python" ]; then
     PYTHON="venv/bin/python"
