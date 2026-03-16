@@ -2,9 +2,10 @@
 useDefault = true
 
 [[allowlists]]
-description = "Ignore virtual environments"
+description = "Ignore virtual environments and baseline file"
 paths = [
     '''venv/''',
     '''\.venv/''',
-    '''node_modules/'''
+    '''node_modules/''',
+    '''.gitleaks-baseline.json'''
 ]

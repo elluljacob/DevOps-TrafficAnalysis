@@ -36,7 +36,7 @@ jobs:
       - name: Secret scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
         with:
-          baseline_path: .gitleaks-baseline.json
+          args: detect --source . --log-level debug --redact -v --staged
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_UPLOAD_ARTIFACT: false
