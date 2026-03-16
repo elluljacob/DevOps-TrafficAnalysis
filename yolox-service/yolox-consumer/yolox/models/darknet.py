@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 # Copyright (c) Megvii Inc. All rights reserved.
 
+# Third Party
 from torch import nn
 
 from .network_blocks import BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck

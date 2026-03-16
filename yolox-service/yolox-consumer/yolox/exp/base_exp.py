@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # Copyright (c) Megvii Inc. All rights reserved.
 
+# Standard Library
 import ast
 import pprint
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List, Tuple
 
+# Third Party
 import torch
 from tabulate import tabulate
 from torch.nn import Module

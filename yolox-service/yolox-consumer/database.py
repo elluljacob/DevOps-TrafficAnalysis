@@ -1,8 +1,9 @@
 import os
 from datetime import datetime, timezone
 
-import psycopg2
 from loguru import logger
+
+import psycopg2
 
 CLASS_MAPPING = {
     "bicycle": "bike",

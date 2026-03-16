@@ -2,10 +2,12 @@
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii Inc. All rights reserved.
 
+# Standard Library
 import contextlib
 from copy import deepcopy
 from typing import Sequence
 
+# Third Party
 import torch
 import torch.nn as nn
 
@@ -20,6 +22,7 @@ __all__ = [
 
 
 def get_model_info(model: nn.Module, tsize: Sequence[int]) -> str:
+    # Third Party
     from thop import profile
 
     stride = 64
@@ -86,6 +89,7 @@ def fuse_model(model: nn.Module) -> nn.Module:
     Returns:
         nn.Module: fused model
     """
+    # Local
     from yolox.models.network_blocks import BaseConv
 
     for m in model.modules():

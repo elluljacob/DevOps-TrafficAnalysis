@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii, Inc. and its affiliates.
 
+
 COCO_CLASSES = (
     "person",
     "bicycle",

@@ -2,13 +2,16 @@
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii Inc. All rights reserved.
 
+# Standard Library
 import math
 
+# Third Party
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from loguru import logger
 
+# Local
 from yolox.utils import bboxes_iou, cxcywh2xyxy, meshgrid
 
 from .network_blocks import BaseConv, DWConv
