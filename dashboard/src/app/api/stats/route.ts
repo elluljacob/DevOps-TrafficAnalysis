@@ -1,15 +1,18 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { PieChartResult } from '@/types/stats'
+import { PieChartResult, TimeRange } from '@/types/stats'
 import { aggregateCameraData } from '@/app/api/stats/testing_db'
 
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const idsString = searchParams.get('ids');
+        const range = (searchParams.get('range') as TimeRange) || 'live';
         
-        const cameraIds = idsString ? idsString.split(',') : ["cam1", "cam2", "cam3"];
+        const cameraIds = idsString ? idsString.split(',') : [];
 
-        const cameraData = await aggregateCameraData(cameraIds);
+        if (cameraIds.length === 0) return NextResponse.json([]);
+
+        const cameraData = await aggregateCameraData(cameraIds, range);
 
         const pieChartResult: PieChartResult[] = cameraData.map((cam) => ({
             stream: cam.cameraId,

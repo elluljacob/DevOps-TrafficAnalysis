@@ -9,12 +9,10 @@ import { useStreams } from '@/components/global/stream_list'
  * usePieData Hook
  * ============================================================================
  */
-function usePieData(selectedIds: string[]) {
+function usePieData(selectedIds: string[], range: TimeRange) {
     const [pieData, setPieData] = useState<PieChartResult[]>([])
 
     useEffect(() => {
-        // If no IDs are selected, we just don't start the fetch/interval logic.
-        // We don't call setState here to avoid the "cascading render" error.
         if (selectedIds.length === 0) {
             return;
         }
@@ -22,7 +20,8 @@ function usePieData(selectedIds: string[]) {
         const fetchData = async () => {
             try {
                 const idsParam = selectedIds.join(',');
-                const res = await fetch(`/api/stats?ids=${idsParam}`)
+                // Added range parameter to the API call
+                const res = await fetch(`/api/stats?ids=${idsParam}&range=${range}`)
                 const result: PieChartResult[] = await res.json()
                 setPieData(result ?? [])
             } catch (err) {
@@ -34,10 +33,9 @@ function usePieData(selectedIds: string[]) {
         const interval = setInterval(fetchData, 5000)
         return () => clearInterval(interval)
         
-    }, [selectedIds.join(',')]) 
+        // Added range to dependency array so it refetches when the dropdown changes
+    }, [selectedIds.join(','), range]) 
 
-    // This handles the "UI reset" when cameras are deselected 
-    // without needing a synchronous setState in the effect.
     return selectedIds.length === 0 ? [] : pieData;
 }
 /* ============================================================================
@@ -78,29 +76,33 @@ function useCameraHistory(range: TimeRange, stream: StreamID) {
 
 export default function StatisticsPage() {
     const [range, setRange] = useState<TimeRange>('live')
+    // Added a separate range state for the pie charts 
+    // (or you can use the same 'range' state if you want them globally synced)
+    const [pieRange, setPieRange] = useState<TimeRange>('live')
     const [stream, setStream] = useState<StreamID>('cam1')
 
     const { streams } = useStreams()
-    
-    // Get array of IDs that are currently selected
     const selectedIds = Object.keys(streams).filter(id => streams[id].selected)
     
-    // Pass those IDs to the hook
-    const pieData = usePieData(selectedIds)
+    // Now passing pieRange to the hook
+    const pieData = usePieData(selectedIds, pieRange)
     const history = useCameraHistory(range, stream)
 
     return (
         <>
-            {pieData.length > 0 && (
-                <TrafficChartTimeline
-                    history={history}
-                    range={range}
-                    stream={stream}
-                    setRange={setRange}
-                    setStream={setStream}
-                />
-            )}
-            <SimplePieCharts pieData={pieData} />
+            <TrafficChartTimeline
+                history={history}
+                range={range}
+                stream={stream}
+                setRange={setRange}
+                setStream={setStream}
+            />
+            
+            <SimplePieCharts 
+                pieData={pieData} 
+                range={pieRange} 
+                setRange={setPieRange} 
+            />
         </>
     )
 }

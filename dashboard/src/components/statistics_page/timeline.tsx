@@ -13,7 +13,7 @@ import {
 import { 
     VEHICLE_CATEGORIES, 
     VEHICLE_CONFIG, 
-    TIME_RANGE_OPTIONS }    from './constants'
+    TIME_RANGE_TIMELINE }    from './constants'
 
 interface TimelineProps {
     history: HistoryDataPoint[];
@@ -61,7 +61,7 @@ export default function TrafficChartTimeline({ history, range, stream, setRange,
                 <h3 className={cd_styles.thirdHeaderFormat}>Real-time Telemetry</h3>
                 <div className={ft_styles.filterGroup}>
                     <SearchableSelect value={stream} setValue={setStream} options={dynamicCameraOptions} placeholder="Select Camera..." />
-                    <SelectDropdown value={range} setValue={setRange} options={TIME_RANGE_OPTIONS} placeholder="Time Range ..." />
+                    <SelectDropdown value={range} setValue={setRange} options={TIME_RANGE_TIMELINE} placeholder="Time Range ..." />
                 </div>
             </div>
 
